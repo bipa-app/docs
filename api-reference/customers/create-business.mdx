@@ -1,0 +1,378 @@
+---
+title: "Create Business Customer"
+description: "Create a new business customer (PJ) with CNPJ."
+api: "POST https://api.bipa.tech/v1/customers"
+---
+
+## Request
+
+Create a customer representing a Brazilian company.
+
+### Body parameters
+
+
+<ParamField body="type" type="string" required>
+  Must be `business`
+</ParamField>
+
+<ParamField body="document" type="string" required>
+  CNPJ number (14 digits, numbers only).
+</ParamField>
+
+<ParamField body="legal_name" type="string" required>
+  Registered company name (razão social)
+</ParamField>
+
+<ParamField body="trade_name" type="string">
+  Doing business as / brand name (nome fantasia)
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Company email address
+</ParamField>
+
+<ParamField body="phone" type="string" required>
+  Phone number in E.164 format
+</ParamField>
+
+<ParamField body="address" type="object" required>
+  <Expandable title="address">
+    <ParamField body="street" type="string" required>
+      Street name
+    </ParamField>
+    <ParamField body="number" type="string" required>
+      Street number
+    </ParamField>
+    <ParamField body="complement" type="string">
+      Suite, floor, unit, etc.
+    </ParamField>
+    <ParamField body="neighborhood" type="string" required>
+      Neighborhood (bairro)
+    </ParamField>
+    <ParamField body="city" type="string" required>
+      City name
+    </ParamField>
+    <ParamField body="state" type="string" required>
+      Two-letter state code
+    </ParamField>
+    <ParamField body="postal_code" type="string" required>
+      CEP (8 digits, numbers only)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="operational_address" type="object">
+  Operational address of the company. Optional. Specify if different from `address`.
+  <Expandable title="address">
+    <ParamField body="street" type="string" required>
+      Street name
+    </ParamField>
+    <ParamField body="number" type="string" required>
+      Street number
+    </ParamField>
+    <ParamField body="complement" type="string">
+      Suite, floor, unit, etc.
+    </ParamField>
+    <ParamField body="neighborhood" type="string" required>
+      Neighborhood (bairro)
+    </ParamField>
+    <ParamField body="city" type="string" required>
+      City name
+    </ParamField>
+    <ParamField body="state" type="string" required>
+      Two-letter state code
+    </ParamField>
+    <ParamField body="postal_code" type="string" required>
+      CEP (8 digits, numbers only)
+    </ParamField>
+  </Expandable>
+</ParamField>
+<ParamField body="owners" type="array" required>
+  It is important to inform all partners in the company's Corporate Structure, or at least those who have a shareholding greater than or equal to 25%.
+  <Expandable title="owner object">
+      <ParamField body="type" type="string" required>
+        Must be `partner`, `representative` or `other_partner`
+      </ParamField>
+    <ParamField body="name" type="string">
+      Full name of the owner
+    </ParamField>
+    <ParamField body="social_name" type="string">
+      Social name of the owner
+    </ParamField>
+    <ParamField body="document" type="string" required>
+      CPF/CNPJ number (11/14 digits)
+    </ParamField>
+    <ParamField body="email" type="string" required>
+      Owner email address
+    </ParamField>
+    <ParamField body="phone" type="string" required>
+      Owner phone number in E.164 format
+    </ParamField>
+    <ParamField body="tax_residence_country_code" type="string" required>
+      The 2-character country code for the company's tax residence (ISO 3166-1 alpha-2).
+    </ParamField>
+    <ParamField body="nationality_country_code" type="string" required>
+      The 2-character country code for the company's nationality (ISO 3166-1 alpha-2).
+    </ParamField>
+    <ParamField body="birth_date" type="string">
+      Date of birth in `YYYY-MM-DD` format
+    </ParamField>
+    <ParamField body="mother_name" type="string">
+      Mother's name
+    </ParamField>
+    <ParamField body="address" type="object" required>
+      The address of the owner.
+      <Expandable title="address">
+        <ParamField body="street" type="string" required>
+          Street name
+        </ParamField>
+        <ParamField body="number" type="string" required>
+          Street number
+        </ParamField>
+        <ParamField body="complement" type="string">
+          Suite, floor, unit, etc.
+        </ParamField>
+        <ParamField body="neighborhood" type="string" required>
+          Neighborhood (bairro)
+        </ParamField>
+        <ParamField body="city" type="string" required>
+          City name
+        </ParamField>
+        <ParamField body="state" type="string" required>
+          Two-letter state code
+        </ParamField>
+        <ParamField body="postal_code" type="string" required>
+          CEP (8 digits, numbers only)
+        </ParamField>
+      </Expandable>
+    </ParamField>
+    <ParamField body="ownership" type="object" required>
+      <Expandable title="type">
+        <ParamField body="type" type="string" required>
+          Must be `direct` or `indirect`.
+
+          Ownership type.
+          - DIRECT: The associate has a direct, immediate ownership stake or relationship with the company.
+          - INDIRECT: The associate's ownership or control flows through one or more intermediary entities.
+        </ParamField>
+
+        <ParamField body="percentage" type="number" required>
+          Shareholding percentage (0-100)
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Key-value pairs for storing additional information
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique customer identifier
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Customer status. Possible values: `pending`, `active`, `rejected`
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST https://api.bipa.tech/v1/customers \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "business",
+    "document": "12345678000199",
+    "legal_name": "Empresa Exemplo LTDA",
+    "trade_name": "Exemplo",
+    "email": "contato@exemplo.com.br",
+    "phone": "+5511999999999",
+    "address": {
+      "street": "Rua Exemplo",
+      "number": "100",
+      "neighborhood": "Centro",
+      "city": "São Paulo",
+      "state": "SP",
+      "postal_code": "01000000"
+    },
+    "owners": [
+      {
+        "type": "partner",
+        "name": "Maria Santos",
+        "social_name": "Maria Santos",
+        "document": "98765432100",
+        "email": "maria@exemplo.com.br",
+        "phone": "+5511988888888",
+        "birth_date": "1985-05-20",
+        "nationality_country_code": "BR",
+        "tax_residence_country_code": "BR",
+        "address": {
+          "street": "Rua dos Sócios",
+          "number": "50",
+          "neighborhood": "Jardins",
+          "city": "São Paulo",
+          "state": "SP",
+          "postal_code": "01400000"
+        },
+        "ownership": {
+          "type": "direct",
+          "percentage": 50
+        }
+      }
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.bipa.tech/v1/customers",
+    headers={
+        "Authorization": "Bearer bipa_live_sk_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "type": "business",
+        "document": "12345678000199",
+        "legal_name": "Empresa Exemplo LTDA",
+        "trade_name": "Exemplo",
+        "email": "contato@exemplo.com.br",
+        "phone": "+5511999999999",
+        "address": {
+            "street": "Rua Exemplo",
+            "number": "100",
+            "neighborhood": "Centro",
+            "city": "São Paulo",
+            "state": "SP",
+            "postal_code": "01000000"
+        },
+        "owners": [
+            {
+                "type": "partner",
+                "name": "Maria Santos",
+                "social_name": "Maria Santos",
+                "document": "98765432100",
+                "email": "maria@exemplo.com.br",
+                "phone": "+5511988888888",
+                "birth_date": "1985-05-20",
+                "nationality_country_code": "BR",
+                "tax_residence_country_code": "BR",
+                "address": {
+                    "street": "Rua dos Sócios",
+                    "number": "50",
+                    "neighborhood": "Jardins",
+                    "city": "São Paulo",
+                    "state": "SP",
+                    "postal_code": "01400000"
+                },
+                "ownership": {
+                    "type": "direct",
+                    "percentage": 50
+                }
+            }
+        ]
+    }
+)
+
+customer = response.json()
+```
+
+```javascript Node.js
+const response = await fetch("https://api.bipa.tech/v1/customers", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer bipa_live_sk_...",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    type: "business",
+    document: "12345678000199",
+    legal_name: "Empresa Exemplo LTDA",
+    trade_name: "Exemplo",
+    email: "contato@exemplo.com.br",
+    phone: "+5511999999999",
+    address: {
+      street: "Rua Exemplo",
+      number: "100",
+      neighborhood: "Centro",
+      city: "São Paulo",
+      state: "SP",
+      postal_code: "01000000"
+    },
+    owners: [
+      {
+        type: "partner",
+        name: "Maria Santos",
+        social_name: "Maria Santos",
+        document: "98765432100",
+        email: "maria@exemplo.com.br",
+        phone: "+5511988888888",
+        birth_date: "1985-05-20",
+        nationality_country_code: "BR",
+        tax_residence_country_code: "BR",
+        address: {
+          street: "Rua dos Sócios",
+          number: "50",
+          neighborhood: "Jardins",
+          city: "São Paulo",
+          state: "SP",
+          postal_code: "01400000"
+        },
+        ownership: {
+          type: "direct",
+          percentage: 50
+        }
+      }
+    ]
+  })
+});
+
+const customer = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201 Created
+{
+  "id": "cus_b2c3d4e5f6g7",
+  "status": "pending",
+  "document": "********0001**",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 400 Invalid CNPJ
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_document",
+    "message": "The CNPJ number provided is invalid",
+    "param": "document"
+  }
+}
+```
+
+```json 400 Missing Owner
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "missing_required_field",
+    "message": "At least one owner is required",
+    "param": "owners"
+  }
+}
+```
+</ResponseExample>
+
+<Note>
+  Business customers typically require additional verification and may take up to 24 hours to become active.
+</Note>
+

@@ -1,0 +1,178 @@
+---
+title: "Introduction"
+description: "Crypto as a Service API for Brazilian businesses. Process payments, manage wallets, and enable 24/7 trading."
+---
+
+## Welcome to Bipa Infra
+
+Bipa Infra provides a complete crypto infrastructure API for Brazilian businesses. Integrate Bitcoin, stablecoins, and Pix payments into your product in weeks, not months.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/authentication">
+    Get your API keys and make your first request in minutes.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/customers/overview">
+    Explore the complete API documentation with code examples.
+  </Card>
+</CardGroup>
+
+## What you can build
+
+<CardGroup cols={2}>
+  <Card title="Pix Payments" icon="bolt">
+    Accept and send instant Pix payments through our Payment Institution infrastructure.
+  </Card>
+  <Card title="Crypto Trading" icon="chart-line">
+    Enable 24/7 BTC and USDT trading with smart order routing for best execution.
+  </Card>
+  <Card title="Lightning Network" icon="zap">
+    Process instant Bitcoin payments with minimal fees via Lightning.
+  </Card>
+  <Card title="On-chain Transfers" icon="wallet">
+    Support USDT deposits and withdrawals across multiple networks.
+  </Card>
+</CardGroup>
+
+## Why Bipa Infra
+
+<AccordionGroup>
+  <Accordion title="Battle-tested infrastructure">
+    R$4 billion+ processed and 300,000+ users served since 2021. Our infrastructure powers some of Brazil's largest crypto applications.
+  </Accordion>
+  <Accordion title="Regulatory compliance">
+    We operate as a licensed VASP and Payment Institution with indirect Pix participation. Your compliance burden is minimized.
+  </Accordion>
+  <Accordion title="Smart order routing">
+    Our engine queries multiple exchange order books simultaneously to find the best price for every trade.
+  </Accordion>
+  <Accordion title="Institutional custody">
+    Multi-signature wallets powered by Fireblocks ensure your customers' assets are secured to institutional standards.
+  </Accordion>
+</AccordionGroup>
+
+## Base URL
+
+All API requests are made to:
+
+```
+https://api.bipa.tech/v1
+```
+
+## Quick example
+
+Create a customer and execute a BRL to USDT trade:
+
+<CodeGroup>
+
+```bash cURL
+# Create a customer
+curl -X POST https://api.bipa.tech/v1/customers \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "individual",
+    "document": {"type": "cpf", "number": "12345678900"},
+    "name": "João Silva",
+    "email": "joao@example.com"
+  }'
+
+# Get a quote
+curl "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000" \
+  -H "Authorization: Bearer bipa_live_sk_..."
+
+# Execute the trade
+curl -X POST https://api.bipa.tech/v1/quotes/quote_abc123/execute \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id": "cus_a1b2c3d4e5f6"}'
+```
+
+```python Python
+import requests
+
+headers = {
+    "Authorization": "Bearer bipa_live_sk_...",
+    "Content-Type": "application/json"
+}
+
+# Create a customer
+customer = requests.post(
+    "https://api.bipa.tech/v1/customers",
+    headers=headers,
+    json={
+        "type": "individual",
+        "document": {"type": "cpf", "number": "12345678900"},
+        "name": "João Silva",
+        "email": "joao@example.com"
+    }
+).json()
+
+# Get a quote
+quote = requests.get(
+    "https://api.bipa.tech/v1/quotes",
+    headers=headers,
+    params={"from": "BRL", "to": "USDT", "amount_cents": 100000}
+).json()
+
+# Execute the trade
+trade = requests.post(
+    f"https://api.bipa.tech/v1/quotes/{quote['id']}/execute",
+    headers=headers,
+    json={"customer_id": customer["id"]}
+).json()
+```
+
+```javascript Node.js
+const headers = {
+  "Authorization": "Bearer bipa_live_sk_...",
+  "Content-Type": "application/json"
+};
+
+// Create a customer
+const customer = await fetch("https://api.bipa.tech/v1/customers", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    type: "individual",
+    document: { type: "cpf", number: "12345678900" },
+    name: "João Silva",
+    email: "joao@example.com"
+  })
+}).then(r => r.json());
+
+// Get a quote
+const quote = await fetch(
+  "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000",
+  { headers }
+).then(r => r.json());
+
+// Execute the trade
+const trade = await fetch(
+  `https://api.bipa.tech/v1/quotes/${quote.id}/execute`,
+  {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ customer_id: customer.id })
+  }
+).then(r => r.json());
+```
+
+</CodeGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to authenticate your API requests.
+  </Card>
+  <Card title="Create customers" icon="user-plus" href="/api-reference/customers/overview">
+    Start onboarding your users to the platform.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/webhooks">
+    Set up real-time notifications for events.
+  </Card>
+  <Card title="Error handling" icon="triangle-exclamation" href="/errors">
+    Understand error responses and how to handle them.
+  </Card>
+</CardGroup>
+

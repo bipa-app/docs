@@ -1,0 +1,215 @@
+---
+title: "Create Deposit Address"
+description: "Create a blockchain address for a customer to receive inbound transfers."
+api: "POST https://api.bipa.tech/v1/onchain/addresses"
+---
+
+## Request
+
+Create a unique deposit address for a customer. Each customer can have one address per asset/network combination. Inbound transfers to this address will be automatically credited to the customer's balance.
+
+### Body parameters
+
+<ParamField body="customer_id" type="string" required>
+  Customer who will receive inbound transfers
+</ParamField>
+
+<ParamField body="asset" type="string" required>
+  Asset to receive: `USDT` or `BTC`
+</ParamField>
+
+<ParamField body="network" type="string" required>
+  Blockchain network:
+  - For USDT: `polygon`, `arbitrum`, `optimism`, `tron`, `ethereum`
+  - For BTC: `bitcoin`
+</ParamField>
+
+<Note>
+  If an address already exists for this customer/asset/network combination, the existing address is returned.
+</Note>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique address identifier
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  Customer who owns this address
+</ResponseField>
+
+<ResponseField name="asset" type="string">
+  Asset this address accepts
+</ResponseField>
+
+<ResponseField name="network" type="string">
+  Blockchain network
+</ResponseField>
+
+<ResponseField name="address" type="string">
+  The deposit address
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Address status: `active` or `inactive`
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL - USDT on Polygon
+curl -X POST https://api.bipa.tech/v1/onchain/addresses \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "asset": "USDT",
+    "network": "polygon"
+  }'
+```
+
+```bash cURL - Bitcoin
+curl -X POST https://api.bipa.tech/v1/onchain/addresses \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "asset": "BTC",
+    "network": "bitcoin"
+  }'
+```
+
+```python Python
+import requests
+
+# Create USDT deposit address on Polygon
+response = requests.post(
+    "https://api.bipa.tech/v1/onchain/addresses",
+    headers={
+        "Authorization": "Bearer bipa_live_sk_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "asset": "USDT",
+        "network": "polygon"
+    }
+)
+
+address = response.json()
+print(f"Deposit USDT to: {address['address']}")
+print(f"Network: Polygon (MATIC)")
+```
+
+```javascript Node.js
+// Create USDT deposit address on Polygon
+const response = await fetch(
+  "https://api.bipa.tech/v1/onchain/addresses",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer bipa_live_sk_...",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      customer_id: "cus_a1b2c3d4e5f6",
+      asset: "USDT",
+      network: "polygon"
+    })
+  }
+);
+
+const address = await response.json();
+console.log(`Deposit USDT to: ${address.address}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201 Created - USDT
+{
+  "id": "addr_abc123",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "asset": "USDT",
+  "network": "polygon",
+  "address": "0x1234567890abcdef1234567890abcdef12345678",
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 201 Created - Bitcoin
+{
+  "id": "addr_def456",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "asset": "BTC",
+  "network": "bitcoin",
+  "address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - Existing Address
+{
+  "id": "addr_abc123",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "asset": "USDT",
+  "network": "polygon",
+  "address": "0x1234567890abcdef1234567890abcdef12345678",
+  "status": "active",
+  "created_at": "2024-01-10T08:00:00Z"
+}
+```
+
+```json 400 Invalid Network
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "unsupported_network",
+    "message": "Network 'solana' is not supported for USDT",
+    "param": "network"
+  }
+}
+```
+</ResponseExample>
+
+## Address reuse
+
+Each customer gets a unique, persistent address per asset/network:
+
+- Calling this endpoint multiple times returns the same address
+- Addresses are not shared between customers
+- Addresses remain valid indefinitely
+
+<Warning>
+  Always verify the network before displaying to users. Sending USDT on the wrong network will result in lost funds.
+</Warning>
+
+## Display best practices
+
+When showing deposit addresses to users:
+
+```jsx
+function DepositInstructions({ address }) {
+  return (
+    <div>
+      <h3>Deposit USDT</h3>
+      <p>Network: <strong>Polygon (MATIC)</strong></p>
+
+      <Warning>
+        Only send USDT on the Polygon network.
+        Sending other tokens or using other networks will result in permanent loss.
+      </Warning>
+
+      <code>{address.address}</code>
+      <QRCode value={address.address} />
+
+      <p>Minimum deposit: $1.00</p>
+      <p>Confirmations required: 128 blocks (~5 minutes)</p>
+    </div>
+  );
+}
+```
+

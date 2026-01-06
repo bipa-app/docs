@@ -1,0 +1,209 @@
+---
+title: "Rate Limits"
+description: "Understand API rate limits and how to handle throttling."
+---
+
+## Overview
+
+Bipa enforces rate limits to ensure fair usage and protect the API from abuse. Rate limits are applied per API key.
+
+## Default limits
+
+| Tier | Requests per minute | Requests per day |
+|------|---------------------|------------------|
+| Standard | 100 | 10,000 |
+| Growth | 500 | 50,000 |
+| Enterprise | Custom | Custom |
+
+<Note>
+  Contact [sales](https://bipa.tech) if you need higher limits.
+</Note>
+
+## Rate limit headers
+
+Every API response includes headers indicating your current rate limit status:
+
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1705315860
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed per minute |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the limit resets |
+
+## Rate limit exceeded
+
+When you exceed the rate limit, the API returns a `429 Too Many Requests` response:
+
+```json
+{
+  "error": {
+    "type": "rate_limit_error",
+    "code": "too_many_requests",
+    "message": "Rate limit exceeded. Please retry after 45 seconds."
+  }
+}
+```
+
+The `Retry-After` header indicates how long to wait (in seconds) before retrying:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 45
+```
+
+## Handling rate limits
+
+Implement exponential backoff when you receive a `429` response:
+
+<CodeGroup>
+
+```python Python
+import time
+import requests
+
+def api_request(url, max_retries=5):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+
+        if response.status_code == 429:
+            retry_after = int(response.headers.get("Retry-After", 60))
+            print(f"Rate limited. Waiting {retry_after}s...")
+            time.sleep(retry_after)
+            continue
+
+        response.raise_for_status()
+
+    raise Exception("Max retries exceeded")
+```
+
+```javascript Node.js
+async function apiRequest(url, maxRetries = 5) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url, { headers });
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get("Retry-After") || "60");
+      console.log(`Rate limited. Waiting ${retryAfter}s...`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  throw new Error("Max retries exceeded");
+}
+```
+
+```go Go
+func apiRequest(url string, maxRetries int) ([]byte, error) {
+    for attempt := 0; attempt < maxRetries; attempt++ {
+        resp, err := client.Get(url)
+        if err != nil {
+            return nil, err
+        }
+        defer resp.Body.Close()
+
+        if resp.StatusCode == 200 {
+            return io.ReadAll(resp.Body)
+        }
+
+        if resp.StatusCode == 429 {
+            retryAfter, _ := strconv.Atoi(resp.Header.Get("Retry-After"))
+            if retryAfter == 0 {
+                retryAfter = 60
+            }
+            log.Printf("Rate limited. Waiting %ds...", retryAfter)
+            time.Sleep(time.Duration(retryAfter) * time.Second)
+            continue
+        }
+
+        return nil, fmt.Errorf("API error: %d", resp.StatusCode)
+    }
+
+    return nil, errors.New("max retries exceeded")
+}
+```
+
+</CodeGroup>
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Cache responses when possible">
+    Cache GET request responses to reduce API calls. Quotes, for example, are valid for 60 seconds.
+
+    ```python
+    from functools import lru_cache
+
+    @lru_cache(maxsize=100, ttl=60)
+    def get_quote(from_currency, to_currency, amount):
+        return api_request(f"/quotes?from={from_currency}&to={to_currency}&amount_cents={amount}")
+    ```
+  </Accordion>
+
+  <Accordion title="Batch operations">
+    Use list endpoints instead of making individual requests:
+
+    ```python
+    # Instead of this:
+    for customer_id in customer_ids:
+        customer = api_request(f"/customers/{customer_id}")
+
+    # Do this:
+    customers = api_request(f"/customers?ids={','.join(customer_ids)}")
+    ```
+  </Accordion>
+
+  <Accordion title="Use webhooks">
+    Instead of polling for status changes, use [webhooks](/webhooks) to receive real-time notifications.
+  </Accordion>
+
+  <Accordion title="Spread requests over time">
+    If you need to make many requests, spread them out rather than bursting:
+
+    ```python
+    import time
+
+    for item in items:
+        process(item)
+        time.sleep(0.6)  # ~100 requests per minute
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Endpoint-specific limits
+
+Some endpoints have additional limits:
+
+| Endpoint | Limit | Notes |
+|----------|-------|-------|
+| `POST /quotes` | 30/min | Quote generation is rate-limited separately |
+| `POST /pix/payments` | 60/min | Pix outbound payments |
+| `POST /onchain/withdrawals` | 30/min | On-chain withdrawals |
+| `POST /lightning/payments` | 60/min | Lightning payments |
+
+## Monitoring usage
+
+Track your API usage in the [console](https://console.bipa.tech):
+
+1. Go to **Settings** → **API Usage**
+2. View request counts by endpoint
+3. Set up alerts for approaching limits
+
+<Tip>
+  Enable usage alerts to get notified before hitting rate limits.
+</Tip>
+

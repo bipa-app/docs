@@ -1,0 +1,247 @@
+---
+title: "Get Balances"
+description: "Retrieve current balances for a customer."
+api: "GET https://api.bipa.tech/v1/customers/{customer_id}/balances"
+---
+
+## Request
+
+Retrieve the current balances for a customer across all supported assets.
+
+### Path parameters
+
+<ParamField path="customer_id" type="string" required>
+  The customer ID to retrieve balances for
+</ParamField>
+
+## Response
+
+<ResponseField name="customer_id" type="string">
+  Customer identifier
+</ResponseField>
+
+<ResponseField name="balances" type="object">
+  Balance objects keyed by asset
+  <Expandable title="balance object">
+    <ResponseField name="available" type="string">
+      Available balance (smallest unit)
+    </ResponseField>
+    <ResponseField name="pending" type="string">
+      Pending balance (smallest unit)
+    </ResponseField>
+    <ResponseField name="asset" type="string">
+      Asset code
+    </ResponseField>
+    <ResponseField name="decimals" type="integer">
+      Decimal places for the asset
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of last balance update
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances \
+  -H "Authorization: Bearer bipa_live_sk_..."
+```
+
+```python Python
+import requests
+from decimal import Decimal
+
+def to_human(amount: str, decimals: int) -> Decimal:
+    return Decimal(amount) / Decimal(10 ** decimals)
+
+response = requests.get(
+    "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances",
+    headers={"Authorization": "Bearer bipa_live_sk_..."}
+)
+
+data = response.json()
+
+# Display formatted balances
+for asset, balance in data["balances"].items():
+    decimals = balance["decimals"]
+    available = to_human(balance["available"], decimals)
+    pending = to_human(balance["pending"], decimals)
+    total = available + pending
+
+    print(f"{asset}: {available:.{decimals}f} available, {pending:.{decimals}f} pending (total: {total:.{decimals}f})")
+```
+
+```javascript Node.js
+function toHuman(amount, decimals) {
+  return Number(BigInt(amount)) / 10 ** decimals;
+}
+
+const response = await fetch(
+  "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances",
+  {
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+  }
+);
+
+const { balances } = await response.json();
+
+// Display formatted balances
+for (const [asset, balance] of Object.entries(balances)) {
+  const decimals = balance.decimals;
+  const available = toHuman(balance.available, decimals);
+  const pending = toHuman(balance.pending, decimals);
+  const total = available + pending;
+
+  console.log(`${asset}: ${available.toFixed(decimals)} available, ${pending.toFixed(decimals)} pending (total: ${total.toFixed(decimals)})`);
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "balances": {
+    "BRL": {
+      "available": "150000",
+      "pending": "50000",
+      "asset": "BRL",
+      "decimals": 2
+    },
+    "USDT": {
+      "available": "245670000",
+      "pending": "100000000",
+      "asset": "USDT",
+      "decimals": 6
+    },
+    "BTC": {
+      "available": "5234567",
+      "pending": "1000000",
+      "asset": "BTC",
+      "decimals": 8
+    }
+  },
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - New Customer (Zero Balances)
+{
+  "customer_id": "cus_new123",
+  "balances": {
+    "BRL": {
+      "available": "0",
+      "pending": "0",
+      "asset": "BRL",
+      "decimals": 2
+    },
+    "USDT": {
+      "available": "0",
+      "pending": "0",
+      "asset": "USDT",
+      "decimals": 6
+    },
+    "BTC": {
+      "available": "0",
+      "pending": "0",
+      "asset": "BTC",
+      "decimals": 8
+    }
+  },
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 404 Not Found
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "customer_not_found",
+    "message": "No customer found with ID cus_a1b2c3d4e5f6"
+  }
+}
+```
+</ResponseExample>
+
+## Checking sufficient balance
+
+Before executing operations, verify sufficient balance:
+
+```python
+from decimal import Decimal
+
+def to_smallest_unit(amount: Decimal, decimals: int) -> str:
+    return str(int(amount * Decimal(10 ** decimals)))
+
+def has_sufficient_balance(customer_id: str, asset: str, amount: Decimal) -> bool:
+    """Check if customer has sufficient available balance."""
+
+    response = requests.get(
+        f"https://api.bipa.tech/v1/customers/{customer_id}/balances",
+        headers={"Authorization": "Bearer bipa_live_sk_..."}
+    )
+
+    balances = response.json()["balances"]
+
+    if asset not in balances:
+        return False
+
+    balance = balances[asset]
+    available = Decimal(balance["available"])
+    required = Decimal(to_smallest_unit(amount, balance["decimals"]))
+
+    return available >= required
+
+# Usage: Check if customer has 100 USDT available
+if has_sufficient_balance("cus_abc123", "USDT", Decimal("100")):
+    # Proceed with trade or withdrawal
+    pass
+else:
+    # Handle insufficient balance
+    pass
+```
+
+## Display helper
+
+Format balances for display in your UI:
+
+```typescript
+interface FormattedBalance {
+  asset: string;
+  available: string;
+  pending: string;
+  total: string;
+}
+
+function formatBalances(balances: Record<string, Balance>): FormattedBalance[] {
+  const formatters: Record<string, Intl.NumberFormat> = {
+    BRL: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }),
+    USDT: new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    BTC: new Intl.NumberFormat("en-US", { minimumFractionDigits: 8, maximumFractionDigits: 8 })
+  };
+
+  return Object.entries(balances).map(([asset, balance]) => {
+    const decimals = balance.decimals;
+    const available = Number(BigInt(balance.available)) / 10 ** decimals;
+    const pending = Number(BigInt(balance.pending)) / 10 ** decimals;
+    const total = available + pending;
+
+    const formatter = formatters[asset];
+
+    return {
+      asset,
+      available: asset === "BRL" ? formatter.format(available) : `${formatter.format(available)} ${asset}`,
+      pending: asset === "BRL" ? formatter.format(pending) : `${formatter.format(pending)} ${asset}`,
+      total: asset === "BRL" ? formatter.format(total) : `${formatter.format(total)} ${asset}`
+    };
+  });
+}
+
+// Example output:
+// [
+//   { asset: "BRL", available: "R$ 1.500,00", pending: "R$ 500,00", total: "R$ 2.000,00" },
+//   { asset: "USDT", available: "245.67 USDT", pending: "100.00 USDT", total: "345.67 USDT" },
+//   { asset: "BTC", available: "0.05234567 BTC", pending: "0.01000000 BTC", total: "0.06234567 BTC" }
+// ]
+```

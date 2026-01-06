@@ -1,0 +1,278 @@
+---
+title: "Errors"
+description: "Understand error responses and how to handle them in your integration."
+---
+
+## Error response format
+
+When an error occurs, the API returns a JSON response with an `error` object:
+
+```json
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "insufficient_balance",
+    "message": "Customer does not have sufficient balance for this operation",
+    "param": "amount_cents",
+    "doc_url": "https://docs.bipa.tech/errors#insufficient_balance"
+  }
+}
+```
+
+### Error object fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | The category of error |
+| `code` | string | A specific error code for programmatic handling |
+| `message` | string | A human-readable description of the error |
+| `param` | string | The parameter that caused the error (when applicable) |
+| `doc_url` | string | Link to documentation about this error |
+
+## HTTP status codes
+
+| Status | Description |
+|--------|-------------|
+| `200` | Success |
+| `201` | Resource created |
+| `400` | Bad request — invalid parameters |
+| `401` | Unauthorized — invalid or missing API key |
+| `403` | Forbidden — insufficient permissions |
+| `404` | Not found — resource doesn't exist |
+| `409` | Conflict — duplicate idempotency key |
+| `422` | Unprocessable — valid request but cannot be completed |
+| `429` | Too many requests — rate limit exceeded |
+| `500` | Internal server error |
+
+## Error types
+
+### `invalid_request_error`
+
+The request was malformed or missing required parameters.
+
+```json
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "missing_required_field",
+    "message": "The 'document' field is required",
+    "param": "document"
+  }
+}
+```
+
+### `authentication_error`
+
+The API key is invalid, missing, or revoked.
+
+```json
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "message": "The API key provided is invalid or has been revoked."
+  }
+}
+```
+
+### `rate_limit_error`
+
+Too many requests in a short period.
+
+```json
+{
+  "error": {
+    "type": "rate_limit_error",
+    "code": "too_many_requests",
+    "message": "Rate limit exceeded. Please retry after 60 seconds."
+  }
+}
+```
+
+### `api_error`
+
+An internal error occurred on Bipa's servers.
+
+```json
+{
+  "error": {
+    "type": "api_error",
+    "code": "internal_error",
+    "message": "An unexpected error occurred. Please try again."
+  }
+}
+```
+
+## Common error codes
+
+### Customer errors
+
+| Code | Description |
+|------|-------------|
+| `customer_not_found` | The specified customer ID doesn't exist |
+| `customer_inactive` | The customer account has been deactivated |
+| `duplicate_document` | A customer with this CPF/CNPJ already exists |
+| `invalid_document` | The CPF or CNPJ number is invalid |
+
+### Balance errors
+
+| Code | Description |
+|------|-------------|
+| `insufficient_balance` | Not enough funds to complete the operation |
+| `balance_locked` | Funds are temporarily locked (pending transactions) |
+
+### Quote errors
+
+| Code | Description |
+|------|-------------|
+| `quote_expired` | The quote has expired and cannot be executed |
+| `quote_already_executed` | This quote has already been used |
+| `invalid_currency_pair` | The currency pair is not supported |
+| `amount_too_small` | The amount is below the minimum allowed |
+| `amount_too_large` | The amount exceeds the maximum allowed |
+
+### Pix errors
+
+| Code | Description |
+|------|-------------|
+| `pix_key_not_found` | The destination Pix key doesn't exist |
+| `pix_key_inactive` | The Pix key has been deactivated |
+| `pix_limit_exceeded` | Transaction exceeds Pix limits |
+| `invalid_pix_key_type` | The Pix key type is not valid |
+
+### Transfer errors
+
+| Code | Description |
+|------|-------------|
+| `invalid_address` | The destination address is invalid |
+| `unsupported_network` | The specified network is not supported |
+| `withdrawal_disabled` | Withdrawals are temporarily disabled |
+
+### Idempotency errors
+
+| Code | Description |
+|------|-------------|
+| `duplicate_idempotency_key` | This idempotency key was already used with different parameters |
+
+## Handling errors
+
+<CodeGroup>
+
+```python Python
+import requests
+
+try:
+    response = requests.post(
+        "https://api.bipa.tech/v1/customers",
+        headers={"Authorization": "Bearer bipa_live_sk_..."},
+        json={"type": "individual", "name": "João"}
+    )
+    response.raise_for_status()
+    customer = response.json()
+except requests.exceptions.HTTPError as e:
+    error = e.response.json().get("error", {})
+
+    if error.get("code") == "duplicate_document":
+        # Customer already exists, retrieve instead
+        pass
+    elif error.get("type") == "rate_limit_error":
+        # Wait and retry
+        time.sleep(60)
+    else:
+        # Log and handle other errors
+        print(f"API error: {error.get('message')}")
+```
+
+```javascript Node.js
+try {
+  const response = await fetch("https://api.bipa.tech/v1/customers", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer bipa_live_sk_...",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ type: "individual", name: "João" })
+  });
+
+  if (!response.ok) {
+    const { error } = await response.json();
+
+    if (error.code === "duplicate_document") {
+      // Customer already exists, retrieve instead
+    } else if (error.type === "rate_limit_error") {
+      // Wait and retry
+      await new Promise(r => setTimeout(r, 60000));
+    } else {
+      console.error(`API error: ${error.message}`);
+    }
+    return;
+  }
+
+  const customer = await response.json();
+} catch (err) {
+  console.error("Network error:", err);
+}
+```
+
+```go Go
+resp, err := client.Do(req)
+if err != nil {
+    log.Fatal("Network error:", err)
+}
+defer resp.Body.Close()
+
+if resp.StatusCode >= 400 {
+    var errorResp struct {
+        Error struct {
+            Type    string `json:"type"`
+            Code    string `json:"code"`
+            Message string `json:"message"`
+        } `json:"error"`
+    }
+    json.NewDecoder(resp.Body).Decode(&errorResp)
+
+    switch errorResp.Error.Code {
+    case "duplicate_document":
+        // Customer already exists
+    case "rate_limit_error":
+        time.Sleep(60 * time.Second)
+        // Retry
+    default:
+        log.Printf("API error: %s", errorResp.Error.Message)
+    }
+}
+```
+
+</CodeGroup>
+
+## Retry strategy
+
+For transient errors (`5xx` status codes and rate limits), implement exponential backoff:
+
+```python
+import time
+import random
+
+def api_request_with_retry(url, max_retries=3):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+
+        if response.status_code == 429 or response.status_code >= 500:
+            # Exponential backoff with jitter
+            delay = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(delay)
+            continue
+
+        # Non-retryable error
+        response.raise_for_status()
+
+    raise Exception("Max retries exceeded")
+```
+
+<Note>
+  Don't retry `4xx` errors (except `429`). These indicate client-side issues that won't resolve by retrying.
+</Note>
+

@@ -1,0 +1,132 @@
+---
+title: "List Pix Keys"
+description: "List all Pix keys for a customer."
+api: "GET https://api.bipa.tech/v1/pix/keys"
+---
+
+## Request
+
+Retrieve all Pix keys associated with a customer.
+
+<Note>
+  Currently, only EVP (random) keys are available. Each customer receives one EVP key automatically upon account creation.
+</Note>
+
+### Query parameters
+
+<ParamField query="customer_id" type="string" required>
+  The customer ID to list keys for
+</ParamField>
+
+## Response
+
+Returns a list of Pix key objects.
+
+<ResponseField name="object" type="string">
+  Always `list`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of Pix key objects
+  <Expandable title="data">
+    <ResponseField name="id" type="string" required>
+      Unique key identifier
+    </ResponseField>
+    <ResponseField name="customer_id" type="string" required>
+      Customer who owns this key
+    </ResponseField>
+    <ResponseField name="type" type="string" required>
+      Key type. Currently only `evp` is available.
+    </ResponseField>
+    <ResponseField name="key" type="string" required>
+      The Pix key value (UUID for EVP keys)
+    </ResponseField>
+    <ResponseField name="status" type="string" required>
+      Key status: `active` or `inactive`
+    </ResponseField>
+    <ResponseField name="created_at" type="string" required>
+      ISO 8601 timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://api.bipa.tech/v1/pix/keys?customer_id=cus_a1b2c3d4e5f6" \
+  -H "Authorization: Bearer bipa_live_sk_..."
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.bipa.tech/v1/pix/keys",
+    headers={"Authorization": "Bearer bipa_live_sk_..."},
+    params={"customer_id": "cus_a1b2c3d4e5f6"}
+)
+
+keys = response.json()
+for key in keys["data"]:
+    print(f"Key: {key['key']} ({key['type']})")
+```
+
+```javascript Node.js
+const params = new URLSearchParams({
+  customer_id: "cus_a1b2c3d4e5f6"
+});
+
+const response = await fetch(
+  `https://api.bipa.tech/v1/pix/keys?${params}`,
+  {
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+  }
+);
+
+const { data: keys } = await response.json();
+keys.forEach(key => console.log(`Key: ${key.key} (${key.type})`));
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "pix_key_abc123",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "type": "evp",
+      "key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "status": "active",
+      "created_at": "2024-01-10T08:00:00Z"
+    }
+  ]
+}
+```
+
+```json 400 Missing Customer ID
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "missing_parameter",
+    "message": "customer_id is required",
+    "param": "customer_id"
+  }
+}
+```
+</ResponseExample>
+
+## Key types
+
+| Type | Description | Availability |
+|------|-------------|--------------|
+| `evp` | Random UUID key | Available (auto-created) |
+| `cpf` | CPF document key | Coming soon |
+| `cnpj` | CNPJ document key | Coming soon |
+| `email` | Email key | Coming soon |
+| `phone` | Phone number key | Coming soon |
+
+<Tip>
+  EVP keys are recommended for privacy as they don't expose personal information like CPF or email.
+</Tip>
+

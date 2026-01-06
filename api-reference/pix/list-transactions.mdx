@@ -1,0 +1,244 @@
+---
+title: "List Pix Transactions"
+description: "List all Pix transactions with pagination and filtering."
+api: "GET https://api.bipa.tech/v1/pix"
+---
+
+## Request
+
+Retrieve a paginated list of Pix transactions (both inbound and outbound).
+
+### Query parameters
+
+<ParamField query="limit" type="integer" default="20">
+  Number of transactions to return (1-100)
+</ParamField>
+
+<ParamField query="starting_after" type="string">
+  Cursor for pagination. Use the `id` of the last transaction from the previous page.
+</ParamField>
+
+<ParamField query="ending_before" type="string">
+  Cursor for reverse pagination.
+</ParamField>
+
+<ParamField query="customer_id" type="string">
+  Filter by customer
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter by direction: `inbound` or `outbound`
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by status: `pending`, `processing`, `completed`, `failed`, `refunded`
+</ParamField>
+
+<ParamField query="created_after" type="string">
+  Filter transactions created after this ISO 8601 timestamp
+</ParamField>
+
+<ParamField query="created_before" type="string">
+  Filter transactions created before this ISO 8601 timestamp
+</ParamField>
+
+## Response
+
+Returns a paginated list of Pix transaction objects.
+
+<ResponseField name="object" type="string">
+  Always `list`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of Pix transaction objects
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  Whether more results exist
+</ResponseField>
+
+<ResponseField name="total_count" type="integer">
+  Total number of transactions matching the filters
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+# List all transactions
+curl "https://api.bipa.tech/v1/pix?limit=20" \
+  -H "Authorization: Bearer bipa_live_sk_..."
+
+# Filter by customer and direction
+curl "https://api.bipa.tech/v1/pix?customer_id=cus_abc123&direction=inbound" \
+  -H "Authorization: Bearer bipa_live_sk_..."
+
+# Filter by date range
+curl "https://api.bipa.tech/v1/pix?created_after=2024-01-01T00:00:00Z&created_before=2024-01-31T23:59:59Z" \
+  -H "Authorization: Bearer bipa_live_sk_..."
+```
+
+```python Python
+import requests
+from decimal import Decimal
+
+def to_brl(amount: str, decimals: int) -> Decimal:
+    return Decimal(amount) / Decimal(10 ** decimals)
+
+# List all completed inbound transactions for a customer
+response = requests.get(
+    "https://api.bipa.tech/v1/pix",
+    headers={"Authorization": "Bearer bipa_live_sk_..."},
+    params={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "direction": "inbound",
+        "status": "completed",
+        "limit": 50
+    }
+)
+
+result = response.json()
+total_received = sum(
+    int(t["amount"]) for t in result["data"]
+)
+# Assuming all BRL with 2 decimals
+total_brl = Decimal(total_received) / Decimal(100)
+print(f"Total received: R$ {total_brl:.2f}")
+```
+
+```javascript Node.js
+// List recent transactions
+const params = new URLSearchParams({
+  limit: "20",
+  status: "completed",
+  created_after: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+});
+
+const response = await fetch(
+  `https://api.bipa.tech/v1/pix?${params}`,
+  {
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+  }
+);
+
+const { data: transactions, has_more, total_count } = await response.json();
+console.log(`Found ${total_count} transactions in the last 24 hours`);
+
+// Calculate total
+const totalCentavos = transactions.reduce((sum, t) => sum + BigInt(t.amount), 0n);
+const totalBrl = Number(totalCentavos) / 100;
+console.log(`Total: R$ ${totalBrl.toFixed(2)}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "pix_abc123",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "direction": "outbound",
+      "amount": "100000",
+      "fee": "0",
+      "decimals": 2,
+      "status": "completed",
+      "counterparty": {
+        "name": "Maria Santos",
+        "document": "***456***",
+        "pix_key": "recipient@email.com",
+        "bank_account": {
+          "ispb_code": "341",
+          "branch_number": "1234",
+          "account_number": "1234567890",
+          "account_type": "checking"
+        }
+      },
+      "end_to_end_id": "E12345678202401151030abcdef123456",
+      "created_at": "2024-01-15T10:30:00Z",
+      "completed_at": "2024-01-15T10:30:02Z"
+    },
+    {
+      "id": "pix_xyz789",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "direction": "inbound",
+      "amount": "50000",
+      "fee": "0",
+      "decimals": 2,
+      "status": "completed",
+      "counterparty": {
+        "name": "Carlos Oliveira",
+        "document": "***789***",
+        "bank_account": {
+          "ispb_code": "341",
+          "branch_number": "1234",
+          "account_number": "1234567890",
+          "account_type": "checking"
+        }
+      },
+      "qr_code_id": "pix_static_qr_def456",
+      "created_at": "2024-01-15T09:00:00Z",
+      "completed_at": "2024-01-15T09:00:01Z"
+    }
+  ],
+  "has_more": true,
+  "total_count": 245
+}
+```
+</ResponseExample>
+
+## Pagination example
+
+Iterate through all transactions for a customer:
+
+```python
+def get_all_customer_transactions(customer_id: str):
+    transactions = []
+    starting_after = None
+
+    while True:
+        params = {
+            "customer_id": customer_id,
+            "limit": 100
+        }
+        if starting_after:
+            params["starting_after"] = starting_after
+
+        response = requests.get(
+            "https://api.bipa.tech/v1/pix",
+            headers={"Authorization": "Bearer bipa_live_sk_..."},
+            params=params
+        ).json()
+
+        transactions.extend(response["data"])
+
+        if not response["has_more"]:
+            break
+
+        starting_after = response["data"][-1]["id"]
+
+    return transactions
+```
+
+## Aggregating transactions
+
+Calculate daily totals:
+
+```python
+from collections import defaultdict
+from datetime import datetime
+from decimal import Decimal
+
+transactions = get_all_customer_transactions("cus_abc123")
+
+daily_totals = defaultdict(lambda: {"inbound": Decimal("0"), "outbound": Decimal("0")})
+
+for tx in transactions:
+    if tx["status"] == "completed":
+        date = datetime.fromisoformat(tx["created_at"].replace("Z", "")).date()
+        amount = Decimal(tx["amount"]) / Decimal(10 ** tx["decimals"])
+        daily_totals[date][tx["direction"]] += amount
+
+for date, totals in sorted(daily_totals.items()):
+    print(f"{date}: In: R$ {totals['inbound']:.2f}, Out: R$ {totals['outbound']:.2f}")
+```
