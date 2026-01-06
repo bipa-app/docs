@@ -1,0 +1,150 @@
+---
+title: "Trading Overview"
+description: "Enable 24/7 cryptocurrency trading for your users."
+---
+
+## Introduction
+
+The Trading API allows you to execute cryptocurrency trades on behalf of your customers. Bipa's smart order router ensures best-price execution across multiple exchanges.
+
+<CardGroup cols={2}>
+  <Card title="24/7 Trading" icon="clock">
+    Trade any time, including weekends and holidays
+  </Card>
+  <Card title="Instant Settlement" icon="bolt">
+    Trades settle immediately to customer balances
+  </Card>
+  <Card title="Best Execution" icon="chart-line">
+    Smart routing across multiple liquidity sources
+  </Card>
+  <Card title="Low Minimums" icon="coins">
+    Trade from as little as R$ 1.00
+  </Card>
+</CardGroup>
+
+## Quote vs Direct Trade
+
+There are two ways to execute trades:
+
+### Via Quotes (Recommended)
+1. Get a quote with guaranteed rate
+2. Execute the quote within 60 seconds
+3. Trade executes at the quoted rate
+
+Best for: User-facing applications where you want to show the exact amount before confirming.
+
+### Direct Trade
+1. Submit a trade request
+2. Trade executes at current market rate
+3. Final rate determined at execution
+
+Best for: Automated systems, DCA, or when rate display isn't needed.
+
+## Supported pairs
+
+| Pair | Description |
+|------|-------------|
+| `BRL-USDT` | Brazilian Real to USDT |
+| `USDT-BRL` | USDT to Brazilian Real |
+| `BRL-BTC` | Brazilian Real to Bitcoin |
+| `BTC-BRL` | Bitcoin to Brazilian Real |
+| `USDT-BTC` | USDT to Bitcoin |
+| `BTC-USDT` | Bitcoin to USDT |
+
+## The trade object
+
+```json
+{
+  "id": "trd_abc123xyz",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "quote_id": "quote_def456",
+  "pair": "BRL-USDT",
+  "side": "buy",
+  "status": "completed",
+  "from_currency": "BRL",
+  "to_currency": "USDT",
+  "from_amount_cents": 100000,
+  "to_amount": "163.45",
+  "executed_rate": "6.1182",
+  "fee_cents": 100,
+  "fee_currency": "BRL",
+  "created_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:30:01Z"
+}
+```
+
+### Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `id` | string | Unique trade identifier |
+| `customer_id` | string | Customer who executed the trade |
+| `quote_id` | string | Associated quote (if via quote execution) |
+| `pair` | string | Trading pair (e.g., `BRL-USDT`) |
+| `side` | string | `buy` or `sell` |
+| `status` | string | Trade status |
+| `from_currency` | string | Currency debited |
+| `to_currency` | string | Currency credited |
+| `from_amount_cents` | integer | Amount debited (cents for BRL) |
+| `from_amount` | string | Amount debited (for crypto) |
+| `to_amount_cents` | integer | Amount credited (cents for BRL) |
+| `to_amount` | string | Amount credited (for crypto) |
+| `executed_rate` | string | Final execution rate |
+| `fee_cents` | integer | Fee charged |
+| `fee_currency` | string | Fee currency |
+| `created_at` | string | ISO 8601 timestamp |
+| `completed_at` | string | ISO 8601 timestamp |
+
+## Trade statuses
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Trade submitted, awaiting execution |
+| `completed` | Trade successfully executed |
+| `failed` | Trade failed (see error for details) |
+| `cancelled` | Trade was cancelled |
+
+## Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Trade" icon="plus" href="/api-reference/trading/create-trade">
+    Execute a direct trade at market rate
+  </Card>
+  <Card title="Get Trade" icon="magnifying-glass" href="/api-reference/trading/get-trade">
+    Retrieve trade details
+  </Card>
+  <Card title="List Trades" icon="list" href="/api-reference/trading/list-trades">
+    List all trades with filtering
+  </Card>
+</CardGroup>
+
+## Limits
+
+| Pair | Minimum | Maximum per trade |
+|------|---------|-------------------|
+| BRL-USDT | R$ 1.00 | R$ 1,000,000.00 |
+| BRL-BTC | R$ 1.00 | R$ 1,000,000.00 |
+| USDT-BTC | $1.00 | $200,000.00 |
+
+## Fees
+
+Trading fees are calculated as a percentage of the trade amount:
+
+| Volume (30 days) | Fee |
+|------------------|-----|
+| < R$ 100,000 | 0.50% |
+| R$ 100,000 - R$ 1M | 0.35% |
+| R$ 1M - R$ 10M | 0.25% |
+| > R$ 10M | Custom |
+
+<Tip>
+  Contact us for volume discounts on high-volume accounts.
+</Tip>
+
+## Webhooks
+
+| Event | Description |
+|-------|-------------|
+| `trade.completed` | Trade successfully executed |
+| `trade.failed` | Trade execution failed |
+

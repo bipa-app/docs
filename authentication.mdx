@@ -1,0 +1,155 @@
+---
+title: "Authentication"
+description: "Secure your API requests with Bearer token authentication."
+---
+
+## API Keys
+
+All API requests require authentication using Bearer tokens. Include your API key in the `Authorization` header of every request.
+
+```bash
+Authorization: Bearer sk_live_xxxxxxxxxxxx
+```
+
+## Key types
+
+Bipa provides two types of API keys:
+
+| Prefix | Environment | Purpose |
+|--------|-------------|---------|
+| `sk_live_` | Production | Real transactions with real money |
+| `sk_test_` | Sandbox | Testing and development |
+
+<Warning>
+  Never expose your API keys in client-side code, public repositories, or logs. Treat them like passwords.
+</Warning>
+
+## Making authenticated requests
+
+Include your API key in the `Authorization` header:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.bipa.app/v1/customers \
+  -H "Authorization: Bearer sk_live_xxxxxxxxxxxx" \
+  -H "Content-Type: application/json"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.bipa.app/v1/customers",
+    headers={
+        "Authorization": "Bearer sk_live_xxxxxxxxxxxx",
+        "Content-Type": "application/json"
+    }
+)
+```
+
+```javascript Node.js
+const response = await fetch("https://api.bipa.app/v1/customers", {
+  headers: {
+    "Authorization": "Bearer sk_live_xxxxxxxxxxxx",
+    "Content-Type": "application/json"
+  }
+});
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.bipa.app/v1/customers", nil)
+req.Header.Set("Authorization", "Bearer sk_live_xxxxxxxxxxxx")
+req.Header.Set("Content-Type", "application/json")
+
+client := &http.Client{}
+resp, _ := client.Do(req)
+```
+
+</CodeGroup>
+
+## Obtaining API keys
+
+1. Log in to your [Bipa Dashboard](https://dashboard.bipa.app)
+2. Navigate to **Settings** → **API Keys**
+3. Click **Create new key**
+4. Copy your key immediately — it won't be shown again
+
+<Note>
+  You can create multiple API keys for different services or environments. Each key can be revoked independently.
+</Note>
+
+## Sandbox environment
+
+The sandbox environment uses the same base URL but with test API keys:
+
+```bash
+curl https://api.bipa.app/v1/customers \
+  -H "Authorization: Bearer sk_test_xxxxxxxxxxxx"
+```
+
+In sandbox mode:
+- No real money is moved
+- Pix payments are simulated
+- Trades execute with test balances
+- Webhooks are delivered normally
+
+## Authentication errors
+
+If authentication fails, you'll receive a `401 Unauthorized` response:
+
+```json
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "message": "The API key provided is invalid or has been revoked.",
+    "doc_url": "https://docs.bipa.app/errors#invalid_api_key"
+  }
+}
+```
+
+Common authentication issues:
+
+| Error Code | Cause | Solution |
+|------------|-------|----------|
+| `invalid_api_key` | Key doesn't exist or is malformed | Check the key format and copy it again |
+| `revoked_api_key` | Key has been revoked | Generate a new key in the dashboard |
+| `missing_authorization` | No `Authorization` header | Include the header in your request |
+
+## Security best practices
+
+<AccordionGroup>
+  <Accordion title="Use environment variables">
+    Store API keys in environment variables, not in code:
+    ```bash
+    export BIPA_API_KEY=sk_live_xxxxxxxxxxxx
+    ```
+    ```python
+    import os
+    api_key = os.environ.get("BIPA_API_KEY")
+    ```
+  </Accordion>
+  <Accordion title="Rotate keys regularly">
+    Create new keys periodically and revoke old ones. This limits the impact if a key is compromised.
+  </Accordion>
+  <Accordion title="Use separate keys per service">
+    Create different API keys for different services or environments. This makes it easier to revoke access if needed.
+  </Accordion>
+  <Accordion title="Monitor API usage">
+    Review your API logs in the dashboard regularly to detect unusual activity.
+  </Accordion>
+</AccordionGroup>
+
+## IP allowlisting
+
+For additional security, you can restrict API key usage to specific IP addresses:
+
+1. Go to **Settings** → **API Keys** in the dashboard
+2. Select the key you want to restrict
+3. Add allowed IP addresses or CIDR ranges
+
+<Note>
+  IP allowlisting is optional but recommended for production environments.
+</Note>
+

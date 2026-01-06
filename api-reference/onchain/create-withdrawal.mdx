@@ -1,0 +1,269 @@
+---
+title: "Create Withdrawal"
+description: "Withdraw cryptocurrency to an external blockchain address."
+api: "POST https://api.bipa.app/v1/onchain/withdrawals"
+---
+
+## Request
+
+Withdraw cryptocurrency from a customer's balance to an external address.
+
+### Body parameters
+
+<ParamField body="customer_id" type="string" required>
+  Customer initiating the withdrawal
+</ParamField>
+
+<ParamField body="asset" type="string" required>
+  Asset to withdraw: `USDT` or `BTC`
+</ParamField>
+
+<ParamField body="network" type="string" required>
+  Blockchain network:
+  - For USDT: `polygon`, `arbitrum`, `optimism`, `tron`, `ethereum`
+  - For BTC: `bitcoin`
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Amount to withdraw (as string for precision)
+</ParamField>
+
+<ParamField body="destination_address" type="string" required>
+  External address to send funds to
+</ParamField>
+
+<ParamField body="fee_priority" type="string" default="medium">
+  For Bitcoin only: `low`, `medium`, or `high`
+</ParamField>
+
+<ParamField body="idempotency_key" type="string" required>
+  Unique key to prevent duplicate withdrawals
+</ParamField>
+
+<Warning>
+  The customer must have sufficient balance. The amount plus network fee will be deducted.
+</Warning>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique withdrawal identifier
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  Customer who initiated the withdrawal
+</ResponseField>
+
+<ResponseField name="asset" type="string">
+  Asset being withdrawn
+</ResponseField>
+
+<ResponseField name="network" type="string">
+  Blockchain network
+</ResponseField>
+
+<ResponseField name="amount" type="string">
+  Amount being sent
+</ResponseField>
+
+<ResponseField name="fee" type="string">
+  Network fee charged
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Withdrawal status
+</ResponseField>
+
+<ResponseField name="destination_address" type="string">
+  Recipient address
+</ResponseField>
+
+<ResponseField name="tx_hash" type="string">
+  Transaction hash (available after broadcast)
+</ResponseField>
+
+<ResponseField name="idempotency_key" type="string">
+  Your idempotency key
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL - USDT Withdrawal
+curl -X POST https://api.bipa.app/v1/onchain/withdrawals \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "asset": "USDT",
+    "network": "polygon",
+    "amount": "100.00",
+    "destination_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+    "idempotency_key": "wd_unique_456"
+  }'
+```
+
+```bash cURL - Bitcoin Withdrawal
+curl -X POST https://api.bipa.app/v1/onchain/withdrawals \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "asset": "BTC",
+    "network": "bitcoin",
+    "amount": "0.01000000",
+    "destination_address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+    "fee_priority": "medium",
+    "idempotency_key": "wd_btc_789"
+  }'
+```
+
+```python Python
+import requests
+import uuid
+
+response = requests.post(
+    "https://api.bipa.app/v1/onchain/withdrawals",
+    headers={
+        "Authorization": "Bearer sk_live_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "asset": "USDT",
+        "network": "polygon",
+        "amount": "100.00",
+        "destination_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+        "idempotency_key": f"wd_{uuid.uuid4()}"
+    }
+)
+
+withdrawal = response.json()
+print(f"Withdrawal {withdrawal['id']}: {withdrawal['status']}")
+print(f"Amount: {withdrawal['amount']} USDT, Fee: {withdrawal['fee']} USDT")
+```
+
+```javascript Node.js
+import { randomUUID } from "crypto";
+
+const response = await fetch(
+  "https://api.bipa.app/v1/onchain/withdrawals",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer sk_live_...",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      customer_id: "cus_a1b2c3d4e5f6",
+      asset: "USDT",
+      network: "polygon",
+      amount: "100.00",
+      destination_address: "0xabcdef1234567890abcdef1234567890abcdef12",
+      idempotency_key: `wd_${randomUUID()}`
+    })
+  }
+);
+
+const withdrawal = await response.json();
+console.log(`Withdrawal ${withdrawal.id}: ${withdrawal.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201 Created - USDT
+{
+  "id": "wd_xyz789",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "type": "withdrawal",
+  "asset": "USDT",
+  "network": "polygon",
+  "amount": "100.00",
+  "fee": "0.50",
+  "status": "pending",
+  "destination_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "tx_hash": null,
+  "idempotency_key": "wd_unique_456",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 201 Created - Bitcoin
+{
+  "id": "wd_btc123",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "type": "withdrawal",
+  "asset": "BTC",
+  "network": "bitcoin",
+  "amount": "0.01000000",
+  "fee": "0.00005000",
+  "status": "pending",
+  "destination_address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+  "tx_hash": null,
+  "fee_priority": "medium",
+  "idempotency_key": "wd_btc_789",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 400 Insufficient Balance
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "insufficient_balance",
+    "message": "Customer does not have sufficient USDT balance (need 100.50, have 50.00)",
+    "param": "amount"
+  }
+}
+```
+
+```json 400 Invalid Address
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_address",
+    "message": "The destination address is not valid for the Polygon network",
+    "param": "destination_address"
+  }
+}
+```
+
+```json 400 Withdrawals Disabled
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "withdrawal_disabled",
+    "message": "Withdrawals are temporarily disabled for maintenance"
+  }
+}
+```
+</ResponseExample>
+
+## Bitcoin fee priorities
+
+For Bitcoin withdrawals, choose a fee priority based on urgency:
+
+| Priority | Target confirmation | Fee level |
+|----------|---------------------|-----------|
+| `low` | ~6 blocks (~1 hour) | Economy |
+| `medium` | ~3 blocks (~30 min) | Standard |
+| `high` | ~1 block (~10 min) | Priority |
+
+<Note>
+  Actual confirmation times depend on network congestion. The fee is calculated at submission time.
+</Note>
+
+## Address validation
+
+Bipa validates destination addresses before processing:
+
+- **Ethereum-compatible**: Checksum validation
+- **Bitcoin**: Bech32 (bc1...) and legacy (1..., 3...) formats
+- **Tron**: Base58 format starting with T
+
+<Warning>
+  Always confirm the network and address with your user before submitting. Transactions to incorrect addresses cannot be reversed.
+</Warning>
+

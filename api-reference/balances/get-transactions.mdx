@@ -1,0 +1,314 @@
+---
+title: "Get Transactions"
+description: "List transaction history for a customer."
+api: "GET https://api.bipa.app/v1/customers/{customer_id}/transactions"
+---
+
+## Request
+
+Retrieve the transaction history for a customer.
+
+### Path parameters
+
+<ParamField path="customer_id" type="string" required>
+  The customer ID to retrieve transactions for
+</ParamField>
+
+### Query parameters
+
+<ParamField query="limit" type="integer" default="20">
+  Number of transactions to return (1-100)
+</ParamField>
+
+<ParamField query="starting_after" type="string">
+  Cursor for pagination. Use the `id` of the last transaction.
+</ParamField>
+
+<ParamField query="ending_before" type="string">
+  Cursor for reverse pagination.
+</ParamField>
+
+<ParamField query="currency" type="string">
+  Filter by currency: `BRL`, `USDT`, or `BTC`
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by transaction type
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter by direction: `credit` or `debit`
+</ParamField>
+
+<ParamField query="created_after" type="string">
+  Filter transactions created after this ISO 8601 timestamp
+</ParamField>
+
+<ParamField query="created_before" type="string">
+  Filter transactions created before this ISO 8601 timestamp
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  Always `list`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of transaction objects
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  Whether more results exist
+</ResponseField>
+
+<ResponseField name="total_count" type="integer">
+  Total number of transactions matching filters
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+# List all transactions
+curl "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6/transactions?limit=20" \
+  -H "Authorization: Bearer sk_live_..."
+
+# Filter by currency
+curl "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6/transactions?currency=BRL" \
+  -H "Authorization: Bearer sk_live_..."
+
+# Get credits only (deposits)
+curl "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6/transactions?direction=credit" \
+  -H "Authorization: Bearer sk_live_..."
+```
+
+```python Python
+import requests
+
+# Get transaction history
+response = requests.get(
+    "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6/transactions",
+    headers={"Authorization": "Bearer sk_live_..."},
+    params={
+        "limit": 50,
+        "currency": "BRL"
+    }
+)
+
+result = response.json()
+print(f"Found {result['total_count']} BRL transactions")
+
+for txn in result["data"]:
+    sign = "+" if txn["direction"] == "credit" else "-"
+    amount = float(txn["amount"])
+
+    # BRL is in cents
+    if txn["currency"] == "BRL":
+        amount /= 100
+
+    print(f"{txn['created_at']}: {sign}R$ {amount:.2f} - {txn['description']}")
+```
+
+```javascript Node.js
+// Get recent transactions
+const response = await fetch(
+  "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6/transactions?limit=20",
+  {
+    headers: { "Authorization": "Bearer sk_live_..." }
+  }
+);
+
+const { data: transactions, total_count } = await response.json();
+console.log(`Total transactions: ${total_count}`);
+
+transactions.forEach(txn => {
+  const sign = txn.direction === "credit" ? "+" : "-";
+  let amount = parseFloat(txn.amount);
+
+  if (txn.currency === "BRL") {
+    amount /= 100;
+  }
+
+  console.log(`${txn.created_at}: ${sign}${amount} ${txn.currency} - ${txn.description}`);
+});
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "txn_abc123xyz",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "type": "trade",
+      "currency": "USDT",
+      "amount": "163.45",
+      "balance_after": "409.12",
+      "direction": "credit",
+      "description": "Trade BRL → USDT",
+      "reference_id": "trd_xyz789",
+      "reference_type": "trade",
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "txn_def456abc",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "type": "trade",
+      "currency": "BRL",
+      "amount": "100000",
+      "balance_after": "50000",
+      "direction": "debit",
+      "description": "Trade BRL → USDT",
+      "reference_id": "trd_xyz789",
+      "reference_type": "trade",
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "txn_ghi789def",
+      "customer_id": "cus_a1b2c3d4e5f6",
+      "type": "pix_deposit",
+      "currency": "BRL",
+      "amount": "150000",
+      "balance_after": "150000",
+      "direction": "credit",
+      "description": "Pix deposit from Carlos O.",
+      "reference_id": "pix_pay_abc123",
+      "reference_type": "pix_payment",
+      "created_at": "2024-01-15T09:00:00Z"
+    }
+  ],
+  "has_more": true,
+  "total_count": 156
+}
+```
+</ResponseExample>
+
+## Building a transaction ledger
+
+Create a detailed transaction history:
+
+```python
+def get_transaction_ledger(customer_id: str, currency: str, days: int = 30):
+    """Generate a transaction ledger for a specific currency."""
+
+    from datetime import datetime, timedelta
+
+    created_after = (datetime.now() - timedelta(days=days)).isoformat() + "Z"
+    transactions = []
+    starting_after = None
+
+    # Fetch all transactions
+    while True:
+        params = {
+            "currency": currency,
+            "created_after": created_after,
+            "limit": 100
+        }
+        if starting_after:
+            params["starting_after"] = starting_after
+
+        response = requests.get(
+            f"https://api.bipa.app/v1/customers/{customer_id}/transactions",
+            headers={"Authorization": "Bearer sk_live_..."},
+            params=params
+        ).json()
+
+        transactions.extend(response["data"])
+
+        if not response["has_more"]:
+            break
+        starting_after = response["data"][-1]["id"]
+
+    # Sort by date (oldest first)
+    transactions.sort(key=lambda x: x["created_at"])
+
+    # Generate ledger
+    print(f"\n{'Date':<20} {'Type':<20} {'Debit':<15} {'Credit':<15} {'Balance':<15}")
+    print("-" * 85)
+
+    for txn in transactions:
+        date = txn["created_at"][:19].replace("T", " ")
+        amount = float(txn["amount"])
+        balance = float(txn["balance_after"])
+
+        # Format for BRL (cents)
+        if currency == "BRL":
+            amount /= 100
+            balance /= 100
+
+        debit = f"{amount:.2f}" if txn["direction"] == "debit" else ""
+        credit = f"{amount:.2f}" if txn["direction"] == "credit" else ""
+
+        print(f"{date:<20} {txn['type']:<20} {debit:<15} {credit:<15} {balance:<15.2f}")
+
+# Generate ledger
+get_transaction_ledger("cus_abc123", "BRL", days=30)
+```
+
+## Export to CSV
+
+```python
+import csv
+from io import StringIO
+
+def export_transactions_csv(customer_id: str, currency: str = None):
+    """Export transactions to CSV format."""
+
+    transactions = []
+    starting_after = None
+
+    while True:
+        params = {"limit": 100}
+        if currency:
+            params["currency"] = currency
+        if starting_after:
+            params["starting_after"] = starting_after
+
+        response = requests.get(
+            f"https://api.bipa.app/v1/customers/{customer_id}/transactions",
+            headers={"Authorization": "Bearer sk_live_..."},
+            params=params
+        ).json()
+
+        transactions.extend(response["data"])
+
+        if not response["has_more"]:
+            break
+        starting_after = response["data"][-1]["id"]
+
+    # Create CSV
+    output = StringIO()
+    writer = csv.DictWriter(output, fieldnames=[
+        "date", "type", "currency", "amount", "direction",
+        "balance_after", "description", "reference_id"
+    ])
+
+    writer.writeheader()
+    for txn in transactions:
+        amount = float(txn["amount"])
+        balance = float(txn["balance_after"])
+
+        if txn["currency"] == "BRL":
+            amount /= 100
+            balance /= 100
+
+        writer.writerow({
+            "date": txn["created_at"],
+            "type": txn["type"],
+            "currency": txn["currency"],
+            "amount": amount,
+            "direction": txn["direction"],
+            "balance_after": balance,
+            "description": txn["description"],
+            "reference_id": txn.get("reference_id", "")
+        })
+
+    return output.getvalue()
+
+# Export and save
+csv_data = export_transactions_csv("cus_abc123")
+with open("transactions.csv", "w") as f:
+    f.write(csv_data)
+```
+

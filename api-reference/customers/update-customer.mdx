@@ -1,0 +1,220 @@
+---
+title: "Update Customer"
+description: "Update an existing customer's information."
+api: "PATCH https://api.bipa.app/v1/customers/{customer_id}"
+---
+
+## Request
+
+Update a customer's mutable fields. Only include the fields you want to change.
+
+### Path parameters
+
+<ParamField path="customer_id" type="string" required>
+  The unique identifier of the customer
+</ParamField>
+
+### Body parameters
+
+<ParamField body="email" type="string">
+  New email address
+</ParamField>
+
+<ParamField body="phone" type="string">
+  New phone number in E.164 format
+</ParamField>
+
+<ParamField body="address" type="object">
+  Updated address (partial updates supported)
+  <Expandable title="address">
+    <ParamField body="street" type="string">
+      Street name
+    </ParamField>
+    <ParamField body="number" type="string">
+      Street number
+    </ParamField>
+    <ParamField body="complement" type="string">
+      Apartment, suite, etc.
+    </ParamField>
+    <ParamField body="neighborhood" type="string">
+      Neighborhood
+    </ParamField>
+    <ParamField body="city" type="string">
+      City
+    </ParamField>
+    <ParamField body="state" type="string">
+      State code
+    </ParamField>
+    <ParamField body="postal_code" type="string">
+      CEP
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="trade_name" type="string">
+  Business trade name (business customers only)
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Custom key-value pairs. Set a key to `null` to remove it.
+</ParamField>
+
+<Warning>
+  You cannot update the `document`, `name`, `legal_name`, `birth_date`, or `type` fields. Contact support if these need to be changed.
+</Warning>
+
+## Response
+
+Returns the updated customer object.
+
+<RequestExample>
+```bash cURL
+curl -X PATCH https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6 \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "joao.novo@example.com",
+    "phone": "+5511888888888",
+    "address": {
+      "street": "Rua Nova",
+      "number": "500"
+    },
+    "metadata": {
+      "internal_id": "user_12345",
+      "tier": "premium"
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6",
+    headers={
+        "Authorization": "Bearer sk_live_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "email": "joao.novo@example.com",
+        "phone": "+5511888888888",
+        "address": {
+            "street": "Rua Nova",
+            "number": "500"
+        },
+        "metadata": {
+            "internal_id": "user_12345",
+            "tier": "premium"
+        }
+    }
+)
+
+customer = response.json()
+```
+
+```javascript Node.js
+const response = await fetch(
+  "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6",
+  {
+    method: "PATCH",
+    headers: {
+      "Authorization": "Bearer sk_live_...",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: "joao.novo@example.com",
+      phone: "+5511888888888",
+      address: {
+        street: "Rua Nova",
+        number: "500"
+      },
+      metadata: {
+        internal_id: "user_12345",
+        tier: "premium"
+      }
+    })
+  }
+);
+
+const customer = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "id": "cus_a1b2c3d4e5f6",
+  "type": "individual",
+  "status": "active",
+  "document": {
+    "type": "cpf",
+    "number": "***456789**"
+  },
+  "name": "João Silva",
+  "email": "joao.novo@example.com",
+  "phone": "+5511888888888",
+  "address": {
+    "street": "Rua Nova",
+    "number": "500",
+    "complement": "Sala 101",
+    "neighborhood": "Bela Vista",
+    "city": "São Paulo",
+    "state": "SP",
+    "postal_code": "01310100"
+  },
+  "metadata": {
+    "internal_id": "user_12345",
+    "tier": "premium"
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-16T14:20:00Z"
+}
+```
+
+```json 404 Not Found
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "customer_not_found",
+    "message": "No customer found with ID cus_a1b2c3d4e5f6"
+  }
+}
+```
+
+```json 400 Invalid Field
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "immutable_field",
+    "message": "The 'document' field cannot be updated",
+    "param": "document"
+  }
+}
+```
+</ResponseExample>
+
+## Metadata usage
+
+Use metadata to store your application's references:
+
+```json
+{
+  "metadata": {
+    "internal_user_id": "usr_abc123",
+    "plan": "premium",
+    "signup_source": "mobile_app",
+    "notes": "VIP customer"
+  }
+}
+```
+
+To remove a metadata key, set it to `null`:
+
+```json
+{
+  "metadata": {
+    "notes": null
+  }
+}
+```
+

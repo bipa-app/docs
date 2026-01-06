@@ -1,0 +1,225 @@
+---
+title: "Create Pix Payment"
+description: "Send an instant Pix payment (cash-out)."
+api: "POST https://api.bipa.app/v1/pix/payments"
+---
+
+## Request
+
+Initiate a Pix payment from a customer's BRL balance to any Pix key.
+
+### Body parameters
+
+<ParamField body="customer_id" type="string" required>
+  Customer sending the payment
+</ParamField>
+
+<ParamField body="amount_cents" type="integer" required>
+  Amount in cents (e.g., `100000` for R$ 1,000.00)
+</ParamField>
+
+<ParamField body="destination" type="object" required>
+  <Expandable title="destination">
+    <ParamField body="type" type="string" required>
+      Must be `pix_key`
+    </ParamField>
+    <ParamField body="key" type="string" required>
+      The recipient's Pix key (CPF, CNPJ, email, phone, or EVP)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="description" type="string">
+  Payment description (max 140 characters). Visible to recipient.
+</ParamField>
+
+<ParamField body="idempotency_key" type="string" required>
+  Unique key to prevent duplicate payments. Must be unique per API key.
+</ParamField>
+
+<Warning>
+  The customer must have sufficient BRL balance to complete the payment.
+</Warning>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique payment identifier
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  Customer who sent the payment
+</ResponseField>
+
+<ResponseField name="amount_cents" type="integer">
+  Payment amount in cents
+</ResponseField>
+
+<ResponseField name="fee_cents" type="integer">
+  Fee charged (typically 0 for Pix)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Payment status
+</ResponseField>
+
+<ResponseField name="destination" type="object">
+  Recipient details including resolved holder name
+</ResponseField>
+
+<ResponseField name="end_to_end_id" type="string">
+  Pix network transaction ID (available after completion)
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp
+</ResponseField>
+
+<ResponseField name="completed_at" type="string">
+  ISO 8601 completion timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST https://api.bipa.app/v1/pix/payments \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "amount_cents": 100000,
+    "destination": {
+      "type": "pix_key",
+      "key": "recipient@email.com"
+    },
+    "description": "Payment for services",
+    "idempotency_key": "pay_unique_123"
+  }'
+```
+
+```python Python
+import requests
+import uuid
+
+response = requests.post(
+    "https://api.bipa.app/v1/pix/payments",
+    headers={
+        "Authorization": "Bearer sk_live_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "amount_cents": 100000,  # R$ 1,000.00
+        "destination": {
+            "type": "pix_key",
+            "key": "recipient@email.com"
+        },
+        "description": "Payment for services",
+        "idempotency_key": f"pay_{uuid.uuid4()}"
+    }
+)
+
+payment = response.json()
+print(f"Payment status: {payment['status']}")
+```
+
+```javascript Node.js
+import { randomUUID } from "crypto";
+
+const response = await fetch("https://api.bipa.app/v1/pix/payments", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer sk_live_...",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    customer_id: "cus_a1b2c3d4e5f6",
+    amount_cents: 100000, // R$ 1,000.00
+    destination: {
+      type: "pix_key",
+      key: "recipient@email.com"
+    },
+    description: "Payment for services",
+    idempotency_key: `pay_${randomUUID()}`
+  })
+});
+
+const payment = await response.json();
+console.log(`Payment status: ${payment.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201 Created
+{
+  "id": "pix_pay_abc123",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "amount_cents": 100000,
+  "fee_cents": 0,
+  "status": "completed",
+  "destination": {
+    "type": "pix_key",
+    "key": "recipient@email.com",
+    "holder_name": "Maria Santos",
+    "holder_document": "***456***"
+  },
+  "description": "Payment for services",
+  "end_to_end_id": "E12345678202401151030abcdef123456",
+  "idempotency_key": "pay_unique_123",
+  "created_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:30:02Z"
+}
+```
+
+```json 400 Insufficient Balance
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "insufficient_balance",
+    "message": "Customer does not have sufficient BRL balance",
+    "param": "amount_cents"
+  }
+}
+```
+
+```json 400 Invalid Pix Key
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "pix_key_not_found",
+    "message": "The destination Pix key was not found",
+    "param": "destination.key"
+  }
+}
+```
+
+```json 409 Duplicate Payment
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "duplicate_idempotency_key",
+    "message": "A payment with this idempotency key already exists"
+  }
+}
+```
+</ResponseExample>
+
+## Idempotency
+
+Always provide a unique `idempotency_key` to prevent duplicate payments:
+
+```python
+# Generate a unique key based on your internal reference
+idempotency_key = f"order_{order_id}_payment"
+
+# Or use UUID
+idempotency_key = f"pay_{uuid.uuid4()}"
+```
+
+If you retry a request with the same idempotency key:
+- If the original succeeded, you'll get the original response
+- If the original failed, the payment won't be retried automatically
+
+<Note>
+  Idempotency keys are valid for 24 hours after the first request.
+</Note>
+

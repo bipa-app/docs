@@ -1,0 +1,233 @@
+---
+title: "Get Quote"
+description: "Get a real-time quote for currency conversion."
+api: "GET https://api.bipa.app/v1/quotes"
+---
+
+## Request
+
+Get a quote for converting between currencies. The quote includes the exchange rate, fees, and is valid for 60 seconds.
+
+### Query parameters
+
+<ParamField query="from" type="string" required>
+  Source currency: `BRL`, `USDT`, or `BTC`
+</ParamField>
+
+<ParamField query="to" type="string" required>
+  Target currency: `BRL`, `USDT`, or `BTC`
+</ParamField>
+
+<ParamField query="amount_cents" type="integer">
+  Amount to convert in source currency cents. Required when `from` is `BRL`.
+</ParamField>
+
+<ParamField query="amount" type="string">
+  Amount to convert for crypto currencies. Required when `from` is `USDT` or `BTC`.
+</ParamField>
+
+<Note>
+  Use `amount_cents` for BRL amounts (e.g., `100000` = R$ 1,000.00).
+  Use `amount` for crypto amounts as a string (e.g., `"100.00"` USDT or `"0.01"` BTC).
+</Note>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique quote identifier to use when executing
+</ResponseField>
+
+<ResponseField name="from_currency" type="string">
+  Source currency
+</ResponseField>
+
+<ResponseField name="to_currency" type="string">
+  Target currency
+</ResponseField>
+
+<ResponseField name="from_amount_cents" type="integer">
+  Source amount in cents (for BRL)
+</ResponseField>
+
+<ResponseField name="from_amount" type="string">
+  Source amount (for crypto)
+</ResponseField>
+
+<ResponseField name="to_amount_cents" type="integer">
+  Target amount in cents (when target is BRL)
+</ResponseField>
+
+<ResponseField name="to_amount" type="string">
+  Target amount (when target is crypto)
+</ResponseField>
+
+<ResponseField name="rate" type="string">
+  Exchange rate applied
+</ResponseField>
+
+<ResponseField name="rate_type" type="string">
+  Rate type: `mid_market`, `bid`, or `ask`
+</ResponseField>
+
+<ResponseField name="spread_bps" type="integer">
+  Spread in basis points
+</ResponseField>
+
+<ResponseField name="fee_cents" type="integer">
+  Fee in BRL cents
+</ResponseField>
+
+<ResponseField name="expires_at" type="string">
+  ISO 8601 expiration timestamp
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 creation timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL - BRL to USDT
+curl "https://api.bipa.app/v1/quotes?from=BRL&to=USDT&amount_cents=100000" \
+  -H "Authorization: Bearer sk_live_..."
+```
+
+```bash cURL - USDT to BRL
+curl "https://api.bipa.app/v1/quotes?from=USDT&to=BRL&amount=100.00" \
+  -H "Authorization: Bearer sk_live_..."
+```
+
+```bash cURL - BRL to BTC
+curl "https://api.bipa.app/v1/quotes?from=BRL&to=BTC&amount_cents=500000" \
+  -H "Authorization: Bearer sk_live_..."
+```
+
+```python Python
+import requests
+
+# BRL to USDT quote
+response = requests.get(
+    "https://api.bipa.app/v1/quotes",
+    headers={"Authorization": "Bearer sk_live_..."},
+    params={
+        "from": "BRL",
+        "to": "USDT",
+        "amount_cents": 100000  # R$ 1,000.00
+    }
+)
+
+quote = response.json()
+print(f"Rate: {quote['rate']} BRL/USDT")
+print(f"You receive: {quote['to_amount']} USDT")
+print(f"Expires at: {quote['expires_at']}")
+```
+
+```javascript Node.js
+// BRL to USDT quote
+const params = new URLSearchParams({
+  from: "BRL",
+  to: "USDT",
+  amount_cents: "100000" // R$ 1,000.00
+});
+
+const response = await fetch(
+  `https://api.bipa.app/v1/quotes?${params}`,
+  {
+    headers: { "Authorization": "Bearer sk_live_..." }
+  }
+);
+
+const quote = await response.json();
+console.log(`Rate: ${quote.rate} BRL/USDT`);
+console.log(`You receive: ${quote.to_amount} USDT`);
+console.log(`Expires at: ${quote.expires_at}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK - BRL to USDT
+{
+  "id": "quote_abc123xyz",
+  "from_currency": "BRL",
+  "to_currency": "USDT",
+  "from_amount_cents": 100000,
+  "to_amount": "163.45",
+  "rate": "6.1182",
+  "rate_type": "mid_market",
+  "spread_bps": 50,
+  "fee_cents": 100,
+  "expires_at": "2024-01-15T10:31:00Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - USDT to BRL
+{
+  "id": "quote_def456abc",
+  "from_currency": "USDT",
+  "to_currency": "BRL",
+  "from_amount": "100.00",
+  "to_amount_cents": 608500,
+  "rate": "6.0850",
+  "rate_type": "bid",
+  "spread_bps": 50,
+  "fee_cents": 0,
+  "expires_at": "2024-01-15T10:31:00Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - BRL to BTC
+{
+  "id": "quote_ghi789def",
+  "from_currency": "BRL",
+  "to_currency": "BTC",
+  "from_amount_cents": 500000,
+  "to_amount": "0.00234567",
+  "rate": "213150.00",
+  "rate_type": "mid_market",
+  "spread_bps": 75,
+  "fee_cents": 250,
+  "expires_at": "2024-01-15T10:31:00Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 400 Invalid Pair
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_currency_pair",
+    "message": "The currency pair BRL-ETH is not supported",
+    "param": "to"
+  }
+}
+```
+
+```json 400 Amount Too Small
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "amount_too_small",
+    "message": "Minimum amount is R$ 1.00 (100 cents)",
+    "param": "amount_cents"
+  }
+}
+```
+</ResponseExample>
+
+## Understanding the rate
+
+The quote shows you exactly what you'll receive:
+
+```
+from_amount_cents = 100000 (R$ 1,000.00)
+rate = 6.1182 (BRL per USDT)
+fee_cents = 100 (R$ 1.00)
+
+Net amount = (100000 - 100) / 6.1182 = 163.45 USDT
+```
+
+<Tip>
+  The `to_amount` already accounts for fees and spread. This is the exact amount the customer will receive.
+</Tip>
+

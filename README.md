@@ -1,43 +1,77 @@
-# Mintlify Starter Kit
+# Bipa Infra API Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+API documentation for **Bipa Infra** - Crypto as a Service for Brazilian businesses.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Overview
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+This documentation is built with [Mintlify](https://mintlify.com) and covers the complete Bipa Infra API:
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+- **Customers** - Manage end-users (individuals and businesses)
+- **Pix** - Brazil's instant payment system integration
+- **Quotes** - Real-time currency conversion quotes
+- **Trading** - 24/7 cryptocurrency trading
+- **On-chain** - USDT and Bitcoin blockchain transfers
+- **Lightning** - Instant Bitcoin payments via Lightning Network
+- **Balances** - Account balances and transaction history
 
-## Development
+## Local Development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+Install the [Mintlify CLI](https://www.npmjs.com/package/mintlify):
 
-```
-npm i -g mint
-```
-
-Run the following command at the root of your documentation, where your `docs.json` is located:
-
-```
-mint dev
+```bash
+npm i -g mintlify
 ```
 
-View your local preview at `http://localhost:3000`.
+Run the development server:
 
-## Publishing changes
+```bash
+mintlify dev
+```
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+The documentation will be available at `http://localhost:3000`.
 
-## Need help?
+## Structure
 
-### Troubleshooting
+```
+docs/
+├── introduction.mdx        # Platform overview
+├── authentication.mdx      # API authentication
+├── errors.mdx              # Error handling
+├── webhooks.mdx            # Webhook integration
+├── rate-limits.mdx         # Rate limiting
+├── api-reference/
+│   ├── customers/          # Customer management
+│   ├── pix/                # Pix payments
+│   ├── quotes/             # Currency quotes
+│   ├── trading/            # Trading operations
+│   ├── onchain/            # On-chain transfers
+│   ├── lightning/          # Lightning Network
+│   └── balances/           # Balances & transactions
+├── docs.json               # Mintlify configuration
+└── logo/                   # Bipa logos
+```
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+## API Base URL
 
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+```
+https://api.bipa.app/v1
+```
+
+## Authentication
+
+All API requests require Bearer token authentication:
+
+```bash
+curl https://api.bipa.app/v1/customers \
+  -H "Authorization: Bearer sk_live_xxxxxxxxxxxx"
+```
+
+## Resources
+
+- [Bipa Infra](https://produtos.bipa.app/crypto-as-a-service) - Product page
+- [Dashboard](https://dashboard.bipa.app) - API key management
+- [Support](mailto:suporte@bipa.app) - Technical support
+
+## License
+
+Copyright © 2024 Bipa. All rights reserved.
