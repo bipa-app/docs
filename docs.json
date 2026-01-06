@@ -29,6 +29,12 @@
         "tab": "API Reference",
         "groups": [
           {
+            "group": "Configuration",
+            "pages": [
+              "api-reference/config/get-config"
+            ]
+          },
+          {
             "group": "Customers",
             "pages": [
               "api-reference/customers/overview",
@@ -43,48 +49,29 @@
             "group": "Pix",
             "pages": [
               "api-reference/pix/overview",
-              "api-reference/pix/create-pix-key",
-              "api-reference/pix/create-payment",
-              "api-reference/pix/create-qr-code",
-              "api-reference/pix/get-payment",
-              "api-reference/pix/list-payments"
+              "api-reference/pix/list-keys",
+              "api-reference/pix/create-static-qr-code",
+              "api-reference/pix/create-payout",
+              "api-reference/pix/get-transaction",
+              "api-reference/pix/list-transactions"
             ]
           },
           {
-            "group": "Quotes",
+            "group": "Quotes & Trading",
             "pages": [
               "api-reference/quotes/overview",
-              "api-reference/quotes/get-quote",
+              "api-reference/quotes/create-quote",
               "api-reference/quotes/execute-quote"
-            ]
-          },
-          {
-            "group": "Trading",
-            "pages": [
-              "api-reference/trading/overview",
-              "api-reference/trading/create-trade",
-              "api-reference/trading/get-trade",
-              "api-reference/trading/list-trades"
             ]
           },
           {
             "group": "On-chain Transfers",
             "pages": [
               "api-reference/onchain/overview",
-              "api-reference/onchain/generate-deposit-address",
-              "api-reference/onchain/create-withdrawal",
+              "api-reference/onchain/create-deposit-address",
+              "api-reference/onchain/create-transfer",
               "api-reference/onchain/get-transfer",
               "api-reference/onchain/list-transfers"
-            ]
-          },
-          {
-            "group": "Lightning Network",
-            "pages": [
-              "api-reference/lightning/overview",
-              "api-reference/lightning/create-invoice",
-              "api-reference/lightning/pay-invoice",
-              "api-reference/lightning/get-payment",
-              "api-reference/lightning/list-payments"
             ]
           },
           {
@@ -102,32 +89,32 @@
       "anchors": [
         {
           "anchor": "API Status",
-          "href": "https://status.bipa.app",
+          "href": "https://status.bipa.tech",
           "icon": "signal"
         },
         {
           "anchor": "Contact Sales",
-          "href": "https://produtos.bipa.app/crypto-as-a-service",
+          "href": "https://bipa.tech",
           "icon": "envelope"
         }
       ]
     }
   },
   "logo": {
-    "light": "/logo/dark.png",
+    "light": "/logo/light.svg",
     "dark": "/logo/dark.png"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:suporte@bipa.app"
+        "href": "mailto:support@bipa.tech"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.bipa.app"
+      "label": "Console",
+      "href": "https://console.bipa.tech"
     }
   },
   "footer": {
@@ -138,7 +125,7 @@
     }
   },
   "api": {
-    "baseUrl": "https://api.bipa.app/v1",
+    "baseUrl": "https://api.bipa.tech/v1",
     "auth": {
       "method": "bearer"
     }

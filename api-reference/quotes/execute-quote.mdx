@@ -1,12 +1,12 @@
 ---
 title: "Execute Quote"
 description: "Execute a quote to complete the currency conversion."
-api: "POST https://api.bipa.app/v1/quotes/{quote_id}/execute"
+api: "POST https://api.bipa.tech/v1/quotes/{quote_id}/execute"
 ---
 
 ## Request
 
-Execute a quote before it expires. This creates a trade that converts the customer's balance at the quoted rate.
+Execute a quote before it expires (30 seconds). This creates a trade that converts the customer's balance at the quoted price.
 
 ### Path parameters
 
@@ -14,14 +14,8 @@ Execute a quote before it expires. This creates a trade that converts the custom
   The quote ID to execute (e.g., `quote_abc123xyz`)
 </ParamField>
 
-### Body parameters
-
-<ParamField body="customer_id" type="string" required>
-  The customer whose balance will be debited
-</ParamField>
-
 <Warning>
-  The customer must have sufficient balance in the source currency. The quote must not be expired.
+  The customer must have sufficient balance in the source asset. The quote must not be expired (30 second validity).
 </Warning>
 
 ## Response
@@ -44,36 +38,56 @@ Returns the completed trade object.
   Trade status: `completed` or `failed`
 </ResponseField>
 
-<ResponseField name="from_currency" type="string">
-  Source currency
+<ResponseField name="from_asset" type="string">
+  Source asset
 </ResponseField>
 
-<ResponseField name="to_currency" type="string">
-  Target currency
-</ResponseField>
-
-<ResponseField name="from_amount_cents" type="integer">
-  Amount debited (in cents for BRL)
+<ResponseField name="to_asset" type="string">
+  Target asset
 </ResponseField>
 
 <ResponseField name="from_amount" type="string">
-  Amount debited (for crypto)
-</ResponseField>
-
-<ResponseField name="to_amount_cents" type="integer">
-  Amount credited (in cents for BRL)
+  Amount debited (smallest unit)
 </ResponseField>
 
 <ResponseField name="to_amount" type="string">
-  Amount credited (for crypto)
+  Amount credited (smallest unit)
 </ResponseField>
 
-<ResponseField name="executed_rate" type="string">
-  The rate at which the trade executed
+<ResponseField name="from_decimals" type="integer">
+  Decimal places for source asset
 </ResponseField>
 
-<ResponseField name="fee_cents" type="integer">
-  Fee charged in BRL cents
+<ResponseField name="to_decimals" type="integer">
+  Decimal places for target asset
+</ResponseField>
+
+<ResponseField name="executed_price" type="string">
+  The price at which the trade executed (smallest unit)
+</ResponseField>
+
+<ResponseField name="fees" type="object">
+  Fee breakdown (same structure as quote)
+  <Expandable title="fees">
+    <ResponseField name="total" type="string">
+      Total fee charged
+    </ResponseField>
+    <ResponseField name="total_bps" type="integer">
+      Total fee in basis points
+    </ResponseField>
+    <ResponseField name="partner" type="string">
+      Partner's fee portion
+    </ResponseField>
+    <ResponseField name="partner_bps" type="integer">
+      Partner fee in basis points
+    </ResponseField>
+    <ResponseField name="bipa" type="string">
+      Bipa's fee portion
+    </ResponseField>
+    <ResponseField name="bipa_bps" type="integer">
+      Bipa fee in basis points
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 <ResponseField name="created_at" type="string">
@@ -86,77 +100,104 @@ Returns the completed trade object.
 
 <RequestExample>
 ```bash cURL
-curl -X POST https://api.bipa.app/v1/quotes/quote_abc123xyz/execute \
-  -H "Authorization: Bearer sk_live_..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "customer_id": "cus_a1b2c3d4e5f6"
-  }'
+curl -X POST https://api.bipa.tech/v1/quotes/quote_abc123xyz/execute \
+  -H "Authorization: Bearer bipa_live_sk_..."
 ```
 
 ```python Python
 import requests
 
-# First, get a quote
-quote_response = requests.get(
-    "https://api.bipa.app/v1/quotes",
-    headers={"Authorization": "Bearer sk_live_..."},
-    params={"from": "BRL", "to": "USDT", "amount_cents": 100000}
+headers = {
+    "Authorization": "Bearer bipa_live_sk_...",
+    "Content-Type": "application/json"
+}
+
+# Step 1: Create a quote
+quote = requests.post(
+    "https://api.bipa.tech/v1/quotes",
+    headers=headers,
+    json={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "from_asset": "BRL",
+        "to_asset": "BTC",
+        "amount": "100000",
+        "amount_asset": "BRL",
+        "amount_type": "gross",
+        "partner_fee_bps": 50
+    }
 ).json()
 
-# Then execute it
-trade_response = requests.post(
-    f"https://api.bipa.app/v1/quotes/{quote_response['id']}/execute",
-    headers={
-        "Authorization": "Bearer sk_live_...",
-        "Content-Type": "application/json"
-    },
-    json={"customer_id": "cus_a1b2c3d4e5f6"}
-)
+print(f"Quote: {quote['id']}")
+print(f"Will receive: {int(quote['to_amount']) / 10**quote['to_decimals']:.8f} BTC")
 
-trade = trade_response.json()
-print(f"Trade completed: {trade['to_amount']} USDT")
+# Step 2: Execute the quote
+trade = requests.post(
+    f"https://api.bipa.tech/v1/quotes/{quote['id']}/execute",
+    headers=headers
+).json()
+
+print(f"Trade completed: {trade['id']}")
+print(f"Received: {int(trade['to_amount']) / 10**trade['to_decimals']:.8f} BTC")
 ```
 
 ```javascript Node.js
-// First, get a quote
-const quoteResponse = await fetch(
-  "https://api.bipa.app/v1/quotes?from=BRL&to=USDT&amount_cents=100000",
-  { headers: { "Authorization": "Bearer sk_live_..." } }
-);
+const headers = {
+  "Authorization": "Bearer bipa_live_sk_...",
+  "Content-Type": "application/json"
+};
+
+// Step 1: Create a quote
+const quoteResponse = await fetch("https://api.bipa.tech/v1/quotes", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    customer_id: "cus_a1b2c3d4e5f6",
+    from_asset: "BRL",
+    to_asset: "BTC",
+    amount: "100000",
+    amount_asset: "BRL",
+    amount_type: "gross",
+    partner_fee_bps: 50
+  })
+});
 const quote = await quoteResponse.json();
 
-// Then execute it
-const tradeResponse = await fetch(
-  `https://api.bipa.app/v1/quotes/${quote.id}/execute`,
-  {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer sk_live_...",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ customer_id: "cus_a1b2c3d4e5f6" })
-  }
-);
+console.log(`Quote: ${quote.id}`);
+console.log(`Will receive: ${Number(BigInt(quote.to_amount)) / 10 ** quote.to_decimals} BTC`);
 
+// Step 2: Execute the quote
+const tradeResponse = await fetch(
+  `https://api.bipa.tech/v1/quotes/${quote.id}/execute`,
+  { method: "POST", headers }
+);
 const trade = await tradeResponse.json();
-console.log(`Trade completed: ${trade.to_amount} USDT`);
+
+console.log(`Trade completed: ${trade.id}`);
 ```
 </RequestExample>
 
 <ResponseExample>
-```json 200 OK
+```json 200 OK - Completed Trade
 {
   "id": "trade_xyz789",
   "quote_id": "quote_abc123xyz",
   "customer_id": "cus_a1b2c3d4e5f6",
   "status": "completed",
-  "from_currency": "BRL",
-  "to_currency": "USDT",
-  "from_amount_cents": 100000,
-  "to_amount": "163.45",
-  "executed_rate": "6.1182",
-  "fee_cents": 100,
+  "from_asset": "BRL",
+  "to_asset": "BTC",
+  "from_amount": "100000",
+  "to_amount": "24628",
+  "from_decimals": 2,
+  "to_decimals": 8,
+  "executed_price": "40200000",
+  "fees": {
+    "total": "1000",
+    "total_bps": 100,
+    "partner": "500",
+    "partner_bps": 50,
+    "bipa": "500",
+    "bipa_bps": 50
+  },
   "created_at": "2024-01-15T10:30:30Z",
   "completed_at": "2024-01-15T10:30:31Z"
 }
@@ -189,7 +230,7 @@ console.log(`Trade completed: ${trade.to_amount} USDT`);
   "error": {
     "type": "invalid_request_error",
     "code": "insufficient_balance",
-    "message": "Customer does not have sufficient BRL balance",
+    "message": "Customer does not have sufficient BRL balance (need 100000, have 50000)",
     "param": "customer_id"
   }
 }
@@ -208,53 +249,123 @@ console.log(`Trade completed: ${trade.to_amount} USDT`);
 
 ## Complete flow example
 
-Here's a complete example of getting and executing a quote:
+Here's a complete example with proper error handling:
 
 ```python
 import requests
-import time
+from decimal import Decimal
 
-headers = {
-    "Authorization": "Bearer sk_live_...",
-    "Content-Type": "application/json"
-}
-
-def convert_brl_to_usdt(customer_id: str, amount_cents: int) -> dict:
-    # Step 1: Get a quote
-    quote = requests.get(
-        "https://api.bipa.app/v1/quotes",
-        headers=headers,
-        params={
-            "from": "BRL",
-            "to": "USDT",
-            "amount_cents": amount_cents
+class BipaQuoteClient:
+    def __init__(self, api_key: str):
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
         }
-    ).json()
+        self.base_url = "https://api.bipa.tech/v1"
 
-    if "error" in quote:
-        raise Exception(f"Quote error: {quote['error']['message']}")
+    def to_human(self, amount: str, decimals: int) -> Decimal:
+        return Decimal(amount) / Decimal(10 ** decimals)
 
-    print(f"Quote received: {quote['to_amount']} USDT at rate {quote['rate']}")
-    print(f"Expires at: {quote['expires_at']}")
+    def convert(
+        self,
+        customer_id: str,
+        from_asset: str,
+        to_asset: str,
+        amount: str,
+        amount_asset: str,
+        amount_type: str = "gross",
+        partner_fee_bps: int = 0
+    ) -> dict:
+        # Step 1: Create quote
+        quote = requests.post(
+            f"{self.base_url}/quotes",
+            headers=self.headers,
+            json={
+                "customer_id": customer_id,
+                "from_asset": from_asset,
+                "to_asset": to_asset,
+                "amount": amount,
+                "amount_asset": amount_asset,
+                "amount_type": amount_type,
+                "partner_fee_bps": partner_fee_bps
+            }
+        ).json()
 
-    # Step 2: Execute the quote
-    trade = requests.post(
-        f"https://api.bipa.app/v1/quotes/{quote['id']}/execute",
-        headers=headers,
-        json={"customer_id": customer_id}
-    ).json()
+        if "error" in quote:
+            raise Exception(f"Quote error: {quote['error']['message']}")
 
-    if "error" in trade:
-        raise Exception(f"Trade error: {trade['error']['message']}")
+        # Display quote details
+        from_human = self.to_human(quote["from_amount"], quote["from_decimals"])
+        to_human = self.to_human(quote["to_amount"], quote["to_decimals"])
+        fee_human = self.to_human(quote["fees"]["total"], quote["from_decimals"])
 
-    return trade
+        print(f"Quote {quote['id']}:")
+        print(f"  Pay: {from_human} {from_asset}")
+        print(f"  Receive: {to_human} {to_asset}")
+        print(f"  Fee: {fee_human} {from_asset} ({quote['fees']['total_bps']} bps)")
+        print(f"    Partner: {self.to_human(quote['fees']['partner'], quote['from_decimals'])} {from_asset}")
+        print(f"    Bipa: {self.to_human(quote['fees']['bipa'], quote['from_decimals'])} {from_asset}")
+        print(f"  Expires: {quote['expires_at']}")
 
-# Execute a R$ 1,000 conversion
-trade = convert_brl_to_usdt("cus_a1b2c3d4e5f6", 100000)
-print(f"Conversion complete! Received {trade['to_amount']} USDT")
+        # Step 2: Execute quote
+        trade = requests.post(
+            f"{self.base_url}/quotes/{quote['id']}/execute",
+            headers=self.headers
+        ).json()
+
+        if "error" in trade:
+            raise Exception(f"Trade error: {trade['error']['message']}")
+
+        return trade
+
+
+# Usage
+client = BipaQuoteClient("bipa_live_sk_...")
+
+# Buy BTC with R$ 1,000 + 0.5% partner fee
+trade = client.convert(
+    customer_id="cus_a1b2c3d4e5f6",
+    from_asset="BRL",
+    to_asset="BTC",
+    amount="100000",      # R$ 1,000
+    amount_asset="BRL",
+    amount_type="gross",
+    partner_fee_bps=50    # 0.5%
+)
+
+print(f"\nTrade completed: {trade['id']}")
+```
+
+## Handling expired quotes
+
+Quotes are valid for 30 seconds. Implement retry logic for production:
+
+```typescript
+async function executeWithRetry(
+  quoteParams: QuoteParams,
+  maxRetries: number = 3
+): Promise<Trade> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Create fresh quote
+    const quote = await createQuote(quoteParams);
+
+    try {
+      // Try to execute
+      const trade = await executeQuote(quote.id);
+      return trade;
+    } catch (error) {
+      if (error.code === "quote_expired" && attempt < maxRetries - 1) {
+        console.log("Quote expired, retrying with fresh quote...");
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error("Max retries exceeded");
+}
 ```
 
 <Note>
-  Quotes are valid for 60 seconds. In production, you should handle the `quote_expired` error and automatically request a new quote.
+  Quotes are valid for **30 seconds**. In production, always handle the `quote_expired` error and automatically request a new quote.
 </Note>
-

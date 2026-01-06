@@ -23,7 +23,7 @@ sequenceDiagram
 
 ## Setting up webhooks
 
-1. Go to **Settings** → **Webhooks** in your [dashboard](https://dashboard.bipa.app)
+1. Go to **Developers** → **Webhooks** in your [console](https://console.bipa.tech)
 2. Click **Add endpoint**
 3. Enter your webhook URL (must be HTTPS)
 4. Select the events you want to receive
@@ -236,13 +236,13 @@ If your endpoint returns a non-`2xx` status or times out, Bipa will retry the we
 | 5 | 8 hours |
 | 6 | 24 hours |
 
-After 6 failed attempts, the webhook is marked as failed. You can view failed webhooks and manually retry them in the dashboard.
+After 6 failed attempts, the webhook is marked as failed. You can view failed webhooks and manually retry them in the console.
 
 ## Testing webhooks
 
-### Using the dashboard
+### Using the console
 
-1. Go to **Settings** → **Webhooks**
+1. Go to **Developers** → **Webhooks**
 2. Select your endpoint
 3. Click **Send test event**
 4. Choose an event type to send
@@ -290,7 +290,7 @@ def handle_webhook(request):
 
 ## Webhook logs
 
-View all webhook deliveries in **Settings** → **Webhooks** → **Logs**. Each log entry shows:
+View all webhook deliveries in **Developers** → **Webhooks** → **Logs**. Each log entry shows:
 
 - Event type and ID
 - Delivery status (success/failed)

@@ -9,9 +9,7 @@ This documentation is built with [Mintlify](https://mintlify.com) and covers the
 - **Customers** - Manage end-users (individuals and businesses)
 - **Pix** - Brazil's instant payment system integration
 - **Quotes** - Real-time currency conversion quotes
-- **Trading** - 24/7 cryptocurrency trading
 - **On-chain** - USDT and Bitcoin blockchain transfers
-- **Lightning** - Instant Bitcoin payments via Lightning Network
 - **Balances** - Account balances and transaction history
 
 ## Local Development
@@ -43,9 +41,7 @@ docs/
 │   ├── customers/          # Customer management
 │   ├── pix/                # Pix payments
 │   ├── quotes/             # Currency quotes
-│   ├── trading/            # Trading operations
 │   ├── onchain/            # On-chain transfers
-│   ├── lightning/          # Lightning Network
 │   └── balances/           # Balances & transactions
 ├── docs.json               # Mintlify configuration
 └── logo/                   # Bipa logos
@@ -54,7 +50,7 @@ docs/
 ## API Base URL
 
 ```
-https://api.bipa.app/v1
+https://api.bipa.tech/v1
 ```
 
 ## Authentication
@@ -62,15 +58,15 @@ https://api.bipa.app/v1
 All API requests require Bearer token authentication:
 
 ```bash
-curl https://api.bipa.app/v1/customers \
-  -H "Authorization: Bearer sk_live_xxxxxxxxxxxx"
+curl https://api.bipa.tech/v1/customers \
+  -H "Authorization: Bearer bipa_live_sk_xxxxxxxxxxxx"
 ```
 
 ## Resources
 
-- [Bipa Infra](https://produtos.bipa.app/crypto-as-a-service) - Product page
-- [Dashboard](https://dashboard.bipa.app) - API key management
-- [Support](mailto:suporte@bipa.app) - Technical support
+- [Bipa Infra](https://bipa.tech) - Product page
+- [Console](https://console.bipa.tech) - API key management
+- [Support](mailto:support@bipa.tech) - Technical support
 
 ## License
 

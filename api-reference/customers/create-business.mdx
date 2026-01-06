@@ -1,7 +1,7 @@
 ---
 title: "Create Business Customer"
 description: "Create a new business customer (PJ) with CNPJ."
-api: "POST https://api.bipa.app/v1/customers"
+api: "POST https://api.bipa.tech/v1/customers"
 ---
 
 ## Request
@@ -10,10 +10,6 @@ Create a customer representing a Brazilian company.
 
 ### Body parameters
 
-
-<ParamField body="partner_id" type="string" required>
-  The partner ID. Required until we implement authentication.
-</ParamField>
 
 <ParamField body="type" type="string" required>
   Must be `business`
@@ -188,8 +184,8 @@ Create a customer representing a Brazilian company.
 
 <RequestExample>
 ```bash cURL
-curl -X POST https://api.bipa.app/v1/customers \
-  -H "Authorization: Bearer sk_live_..." \
+curl -X POST https://api.bipa.tech/v1/customers \
+  -H "Authorization: Bearer bipa_live_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "type": "business",
@@ -238,9 +234,9 @@ curl -X POST https://api.bipa.app/v1/customers \
 import requests
 
 response = requests.post(
-    "https://api.bipa.app/v1/customers",
+    "https://api.bipa.tech/v1/customers",
     headers={
-        "Authorization": "Bearer sk_live_...",
+        "Authorization": "Bearer bipa_live_sk_...",
         "Content-Type": "application/json"
     },
     json={
@@ -290,10 +286,10 @@ customer = response.json()
 ```
 
 ```javascript Node.js
-const response = await fetch("https://api.bipa.app/v1/customers", {
+const response = await fetch("https://api.bipa.tech/v1/customers", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer sk_live_...",
+    "Authorization": "Bearer bipa_live_sk_...",
     "Content-Type": "application/json"
   },
   body: JSON.stringify({

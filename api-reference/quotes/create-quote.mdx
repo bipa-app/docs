@@ -1,0 +1,453 @@
+---
+title: "Create Quote"
+description: "Get a real-time quote for currency conversion with fee breakdown."
+api: "POST https://api.bipa.tech/v1/quotes"
+---
+
+## Request
+
+Create a quote for converting between currencies. The quote locks in a price for 30 seconds and includes a transparent fee breakdown.
+
+### Body parameters
+
+<ParamField body="customer_id" type="string" required>
+  Customer requesting the quote
+</ParamField>
+
+<ParamField body="from_asset" type="string" required>
+  Source asset: `BRL`, `USDT`, or `BTC`
+</ParamField>
+
+<ParamField body="to_asset" type="string" required>
+  Target asset: `BRL`, `USDT`, or `BTC`
+</ParamField>
+
+<ParamField body="amount" type="string" required>
+  Amount in smallest unit of the specified `amount_asset`
+</ParamField>
+
+<ParamField body="amount_asset" type="string" required>
+  Which asset the `amount` refers to: must match `from_asset` or `to_asset`
+</ParamField>
+
+<ParamField body="amount_type" type="string" required>
+  Whether amount is `net` (after fees) or `gross` (before fees)
+  - `net`: Amount the customer receives (for `to_asset`) or spends after fees (for `from_asset`)
+  - `gross`: Total amount including fees
+</ParamField>
+
+<ParamField body="partner_fee_bps" type="integer" default="0">
+  Partner fee in basis points (100 bps = 1%). This fee is added to the total and split between you and Bipa.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique quote identifier to use when executing
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  Customer who requested the quote
+</ResponseField>
+
+<ResponseField name="from_asset" type="string">
+  Source asset
+</ResponseField>
+
+<ResponseField name="to_asset" type="string">
+  Target asset
+</ResponseField>
+
+<ResponseField name="from_amount" type="string">
+  Total amount debited from customer (smallest unit)
+</ResponseField>
+
+<ResponseField name="to_amount" type="string">
+  Total amount credited to customer (smallest unit)
+</ResponseField>
+
+<ResponseField name="from_decimals" type="integer">
+  Decimal places for source asset
+</ResponseField>
+
+<ResponseField name="to_decimals" type="integer">
+  Decimal places for target asset
+</ResponseField>
+
+<ResponseField name="price" type="string">
+  Exchange price: cost of 1 unit of `to_asset` in `from_asset` (smallest unit)
+</ResponseField>
+
+<ResponseField name="price_decimals" type="integer">
+  Decimal places for displaying the price
+</ResponseField>
+
+<ResponseField name="fees" type="object">
+  Fee breakdown
+  <Expandable title="fees">
+    <ResponseField name="total" type="string">
+      Total fee in `from_asset` smallest unit
+    </ResponseField>
+    <ResponseField name="total_bps" type="integer">
+      Total fee as basis points of the transaction
+    </ResponseField>
+    <ResponseField name="partner" type="string">
+      Partner's fee portion in `from_asset` smallest unit
+    </ResponseField>
+    <ResponseField name="partner_bps" type="integer">
+      Partner fee as basis points
+    </ResponseField>
+    <ResponseField name="bipa" type="string">
+      Bipa's fee portion in `from_asset` smallest unit
+    </ResponseField>
+    <ResponseField name="bipa_bps" type="integer">
+      Bipa fee as basis points
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Quote status: `pending`, `expired`, or `executed`
+</ResponseField>
+
+<ResponseField name="expires_at" type="string">
+  ISO 8601 expiration timestamp (30 seconds from creation)
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 creation timestamp
+</ResponseField>
+
+<RequestExample>
+```bash cURL - Spend R$ 1,000 (gross) to buy BTC
+curl -X POST https://api.bipa.tech/v1/quotes \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "from_asset": "BRL",
+    "to_asset": "BTC",
+    "amount": "100000",
+    "amount_asset": "BRL",
+    "amount_type": "gross",
+    "partner_fee_bps": 50
+  }'
+```
+
+```bash cURL - Buy exactly 0.001 BTC (net)
+curl -X POST https://api.bipa.tech/v1/quotes \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "from_asset": "BRL",
+    "to_asset": "BTC",
+    "amount": "100000",
+    "amount_asset": "BTC",
+    "amount_type": "net",
+    "partner_fee_bps": 50
+  }'
+```
+
+```bash cURL - Sell 100 USDT for BRL
+curl -X POST https://api.bipa.tech/v1/quotes \
+  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cus_a1b2c3d4e5f6",
+    "from_asset": "USDT",
+    "to_asset": "BRL",
+    "amount": "100000000",
+    "amount_asset": "USDT",
+    "amount_type": "gross"
+  }'
+```
+
+```python Python
+import requests
+
+# Buy BTC with R$ 1,000 (gross) + 0.5% partner fee
+response = requests.post(
+    "https://api.bipa.tech/v1/quotes",
+    headers={
+        "Authorization": "Bearer bipa_live_sk_...",
+        "Content-Type": "application/json"
+    },
+    json={
+        "customer_id": "cus_a1b2c3d4e5f6",
+        "from_asset": "BRL",
+        "to_asset": "BTC",
+        "amount": "100000",        # R$ 1,000 in centavos
+        "amount_asset": "BRL",
+        "amount_type": "gross",
+        "partner_fee_bps": 50      # 0.5% partner fee
+    }
+)
+
+quote = response.json()
+from_decimals = quote["from_decimals"]
+to_decimals = quote["to_decimals"]
+
+from_amount = int(quote["from_amount"]) / 10 ** from_decimals
+to_amount = int(quote["to_amount"]) / 10 ** to_decimals
+total_fee = int(quote["fees"]["total"]) / 10 ** from_decimals
+
+print(f"Pay: R$ {from_amount:.2f}")
+print(f"Receive: {to_amount:.8f} BTC")
+print(f"Total fee: R$ {total_fee:.2f} ({quote['fees']['total_bps']} bps)")
+print(f"  Partner: R$ {int(quote['fees']['partner']) / 10**from_decimals:.2f}")
+print(f"  Bipa: R$ {int(quote['fees']['bipa']) / 10**from_decimals:.2f}")
+```
+
+```javascript Node.js
+// Buy exactly 0.001 BTC (net) with partner fee
+const response = await fetch("https://api.bipa.tech/v1/quotes", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer bipa_live_sk_...",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    customer_id: "cus_a1b2c3d4e5f6",
+    from_asset: "BRL",
+    to_asset: "BTC",
+    amount: "100000",           // 0.001 BTC in satoshis
+    amount_asset: "BTC",
+    amount_type: "net",
+    partner_fee_bps: 100        // 1% partner fee
+  })
+});
+
+const quote = await response.json();
+const fromAmount = Number(BigInt(quote.from_amount)) / 10 ** quote.from_decimals;
+const toAmount = Number(BigInt(quote.to_amount)) / 10 ** quote.to_decimals;
+
+console.log(`Pay: R$ ${fromAmount.toFixed(2)}`);
+console.log(`Receive: ${toAmount.toFixed(8)} BTC`);
+console.log(`Expires: ${quote.expires_at}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK - BRL to BTC (gross amount)
+{
+  "id": "quote_abc123xyz",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "from_asset": "BRL",
+  "to_asset": "BTC",
+  "from_amount": "100000",
+  "to_amount": "24628",
+  "from_decimals": 2,
+  "to_decimals": 8,
+  "price": "40200000",
+  "price_decimals": 2,
+  "fees": {
+    "total": "1000",
+    "total_bps": 100,
+    "partner": "500",
+    "partner_bps": 50,
+    "bipa": "500",
+    "bipa_bps": 50
+  },
+  "status": "pending",
+  "expires_at": "2024-01-15T10:30:30Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - BRL to BTC (net amount in BTC)
+{
+  "id": "quote_def456abc",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "from_asset": "BRL",
+  "to_asset": "BTC",
+  "from_amount": "406030",
+  "to_amount": "100000",
+  "from_decimals": 2,
+  "to_decimals": 8,
+  "price": "40200000",
+  "price_decimals": 2,
+  "fees": {
+    "total": "4030",
+    "total_bps": 100,
+    "partner": "2015",
+    "partner_bps": 50,
+    "bipa": "2015",
+    "bipa_bps": 50
+  },
+  "status": "pending",
+  "expires_at": "2024-01-15T10:30:30Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - USDT to BRL (sell crypto)
+{
+  "id": "quote_ghi789def",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "from_asset": "USDT",
+  "to_asset": "BRL",
+  "from_amount": "100000000",
+  "to_amount": "49700",
+  "from_decimals": 6,
+  "to_decimals": 2,
+  "price": "20000000",
+  "price_decimals": 6,
+  "fees": {
+    "total": "500000",
+    "total_bps": 50,
+    "partner": "0",
+    "partner_bps": 0,
+    "bipa": "500000",
+    "bipa_bps": 50
+  },
+  "status": "pending",
+  "expires_at": "2024-01-15T10:30:30Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 200 OK - BTC to USDT (crypto to crypto)
+{
+  "id": "quote_jkl012ghi",
+  "customer_id": "cus_a1b2c3d4e5f6",
+  "from_asset": "BTC",
+  "to_asset": "USDT",
+  "from_amount": "100000",
+  "to_amount": "44775000",
+  "from_decimals": 8,
+  "to_decimals": 6,
+  "price": "2222222",
+  "price_decimals": 8,
+  "fees": {
+    "total": "500",
+    "total_bps": 50,
+    "partner": "250",
+    "partner_bps": 25,
+    "bipa": "250",
+    "bipa_bps": 25
+  },
+  "status": "pending",
+  "expires_at": "2024-01-15T10:30:30Z",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+```json 400 Invalid Pair
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_currency_pair",
+    "message": "The currency pair BRL-ETH is not supported",
+    "param": "to_asset"
+  }
+}
+```
+
+```json 400 Amount Too Small
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "amount_too_small",
+    "message": "Minimum amount is R$ 10.00 (1000 centavos)",
+    "param": "amount"
+  }
+}
+```
+
+```json 400 Invalid Amount Asset
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_amount_asset",
+    "message": "amount_asset must be either from_asset (BRL) or to_asset (BTC)",
+    "param": "amount_asset"
+  }
+}
+```
+</ResponseExample>
+
+## Understanding the quote
+
+### Price interpretation
+
+The `price` field represents **how much `from_asset` you need for 1 unit of `to_asset`**:
+
+```
+BRL → BTC quote:
+  price = "40200000"
+  price_decimals = 2
+
+  1 BTC = 40200000 / 10^2 = R$ 402,000.00
+```
+
+### Fee calculation
+
+Fees are expressed both as absolute amounts and basis points:
+
+```python
+# Example: R$ 1,000 → BTC with 100 bps total fee
+from_amount = 100000  # R$ 1,000.00
+fees_total = 1000     # R$ 10.00
+fees_total_bps = 100  # 1%
+
+# Net amount used for conversion
+net_for_conversion = from_amount - fees_total  # R$ 990.00
+
+# Partner earns 50 bps of the transaction
+partner_fee = 500     # R$ 5.00
+partner_bps = 50
+
+# Bipa earns 50 bps
+bipa_fee = 500        # R$ 5.00
+bipa_bps = 50
+```
+
+## Amount type examples
+
+<Tabs>
+  <Tab title="gross from_asset">
+    **"I want to spend exactly R$ 1,000"**
+
+    ```json
+    {
+      "amount": "100000",
+      "amount_asset": "BRL",
+      "amount_type": "gross"
+    }
+    ```
+
+    Result: `from_amount = "100000"` (exactly R$ 1,000 debited)
+  </Tab>
+  <Tab title="net to_asset">
+    **"I want to receive exactly 0.001 BTC"**
+
+    ```json
+    {
+      "amount": "100000",
+      "amount_asset": "BTC",
+      "amount_type": "net"
+    }
+    ```
+
+    Result: `to_amount = "100000"` (exactly 0.001 BTC credited)
+  </Tab>
+  <Tab title="net from_asset">
+    **"I want R$ 990 worth of BTC after fees"**
+
+    ```json
+    {
+      "amount": "99000",
+      "amount_asset": "BRL",
+      "amount_type": "net"
+    }
+    ```
+
+    Result: R$ 990 goes to conversion, fees added on top
+  </Tab>
+</Tabs>
+
+<Tip>
+  For the best user experience, use `amount_type: "gross"` when the user enters a BRL amount, and `amount_type: "net"` when they enter a crypto amount.
+</Tip>
+

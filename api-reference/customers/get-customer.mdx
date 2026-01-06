@@ -1,7 +1,7 @@
 ---
 title: "Get Customer"
 description: "Retrieve a customer by ID."
-api: "GET https://api.bipa.app/v1/customers/{customer_id}"
+api: "GET https://api.bipa.tech/v1/customers/{customer_id}"
 ---
 
 ## Request
@@ -75,16 +75,16 @@ Returns the full customer object.
 
 <RequestExample>
 ```bash cURL
-curl https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6 \
-  -H "Authorization: Bearer sk_live_..."
+curl https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6 \
+  -H "Authorization: Bearer bipa_live_sk_..."
 ```
 
 ```python Python
 import requests
 
 response = requests.get(
-    "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6",
-    headers={"Authorization": "Bearer sk_live_..."}
+    "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6",
+    headers={"Authorization": "Bearer bipa_live_sk_..."}
 )
 
 customer = response.json()
@@ -92,9 +92,9 @@ customer = response.json()
 
 ```javascript Node.js
 const response = await fetch(
-  "https://api.bipa.app/v1/customers/cus_a1b2c3d4e5f6",
+  "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6",
   {
-    headers: { "Authorization": "Bearer sk_live_..." }
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
   }
 );
 

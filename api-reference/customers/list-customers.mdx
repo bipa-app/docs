@@ -1,7 +1,7 @@
 ---
 title: "List Customers"
 description: "List all customers with pagination and filtering."
-api: "GET https://api.bipa.app/v1/customers"
+api: "GET https://api.bipa.tech/v1/customers"
 ---
 
 ## Request
@@ -65,16 +65,16 @@ Returns a paginated list of customers.
 <RequestExample>
 ```bash cURL
 # List all customers
-curl "https://api.bipa.app/v1/customers?limit=20" \
-  -H "Authorization: Bearer sk_live_..."
+curl "https://api.bipa.tech/v1/customers?limit=20" \
+  -H "Authorization: Bearer bipa_live_sk_..."
 
 # Filter by type and status
-curl "https://api.bipa.app/v1/customers?type=individual&status=active" \
-  -H "Authorization: Bearer sk_live_..."
+curl "https://api.bipa.tech/v1/customers?type=individual&status=active" \
+  -H "Authorization: Bearer bipa_live_sk_..."
 
 # Paginate with cursor
-curl "https://api.bipa.app/v1/customers?limit=20&starting_after=cus_abc123" \
-  -H "Authorization: Bearer sk_live_..."
+curl "https://api.bipa.tech/v1/customers?limit=20&starting_after=cus_abc123" \
+  -H "Authorization: Bearer bipa_live_sk_..."
 ```
 
 ```python Python
@@ -82,15 +82,15 @@ import requests
 
 # List all customers
 response = requests.get(
-    "https://api.bipa.app/v1/customers",
-    headers={"Authorization": "Bearer sk_live_..."},
+    "https://api.bipa.tech/v1/customers",
+    headers={"Authorization": "Bearer bipa_live_sk_..."},
     params={"limit": 20}
 )
 
 # Filter by type
 response = requests.get(
-    "https://api.bipa.app/v1/customers",
-    headers={"Authorization": "Bearer sk_live_..."},
+    "https://api.bipa.tech/v1/customers",
+    headers={"Authorization": "Bearer bipa_live_sk_..."},
     params={
         "type": "individual",
         "status": "active"
@@ -103,21 +103,21 @@ customers = response.json()
 ```javascript Node.js
 // List all customers
 const response = await fetch(
-  "https://api.bipa.app/v1/customers?limit=20",
+  "https://api.bipa.tech/v1/customers?limit=20",
   {
-    headers: { "Authorization": "Bearer sk_live_..." }
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
   }
 );
 
 // Filter and paginate
 const filtered = await fetch(
-  "https://api.bipa.app/v1/customers?" + new URLSearchParams({
+  "https://api.bipa.tech/v1/customers?" + new URLSearchParams({
     type: "individual",
     status: "active",
     starting_after: "cus_abc123"
   }),
   {
-    headers: { "Authorization": "Bearer sk_live_..." }
+    headers: { "Authorization": "Bearer bipa_live_sk_..." }
   }
 );
 
@@ -179,8 +179,8 @@ def get_all_customers():
             params["starting_after"] = starting_after
 
         response = requests.get(
-            "https://api.bipa.app/v1/customers",
-            headers={"Authorization": "Bearer sk_live_..."},
+            "https://api.bipa.tech/v1/customers",
+            headers={"Authorization": "Bearer bipa_live_sk_..."},
             params=params
         ).json()
 

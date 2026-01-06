@@ -1,21 +1,21 @@
 ---
-title: "Generate Deposit Address"
-description: "Generate a blockchain address for a customer to receive deposits."
-api: "POST https://api.bipa.app/v1/onchain/deposit-addresses"
+title: "Create Deposit Address"
+description: "Create a blockchain address for a customer to receive inbound transfers."
+api: "POST https://api.bipa.tech/v1/onchain/addresses"
 ---
 
 ## Request
 
-Generate a unique deposit address for a customer. Each customer can have one address per asset/network combination.
+Create a unique deposit address for a customer. Each customer can have one address per asset/network combination. Inbound transfers to this address will be automatically credited to the customer's balance.
 
 ### Body parameters
 
 <ParamField body="customer_id" type="string" required>
-  Customer who will receive deposits
+  Customer who will receive inbound transfers
 </ParamField>
 
 <ParamField body="asset" type="string" required>
-  Asset to deposit: `USDT` or `BTC`
+  Asset to receive: `USDT` or `BTC`
 </ParamField>
 
 <ParamField body="network" type="string" required>
@@ -60,8 +60,8 @@ Generate a unique deposit address for a customer. Each customer can have one add
 
 <RequestExample>
 ```bash cURL - USDT on Polygon
-curl -X POST https://api.bipa.app/v1/onchain/deposit-addresses \
-  -H "Authorization: Bearer sk_live_..." \
+curl -X POST https://api.bipa.tech/v1/onchain/addresses \
+  -H "Authorization: Bearer bipa_live_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -71,8 +71,8 @@ curl -X POST https://api.bipa.app/v1/onchain/deposit-addresses \
 ```
 
 ```bash cURL - Bitcoin
-curl -X POST https://api.bipa.app/v1/onchain/deposit-addresses \
-  -H "Authorization: Bearer sk_live_..." \
+curl -X POST https://api.bipa.tech/v1/onchain/addresses \
+  -H "Authorization: Bearer bipa_live_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -84,11 +84,11 @@ curl -X POST https://api.bipa.app/v1/onchain/deposit-addresses \
 ```python Python
 import requests
 
-# Generate USDT deposit address on Polygon
+# Create USDT deposit address on Polygon
 response = requests.post(
-    "https://api.bipa.app/v1/onchain/deposit-addresses",
+    "https://api.bipa.tech/v1/onchain/addresses",
     headers={
-        "Authorization": "Bearer sk_live_...",
+        "Authorization": "Bearer bipa_live_sk_...",
         "Content-Type": "application/json"
     },
     json={
@@ -104,13 +104,13 @@ print(f"Network: Polygon (MATIC)")
 ```
 
 ```javascript Node.js
-// Generate USDT deposit address on Polygon
+// Create USDT deposit address on Polygon
 const response = await fetch(
-  "https://api.bipa.app/v1/onchain/deposit-addresses",
+  "https://api.bipa.tech/v1/onchain/addresses",
   {
     method: "POST",
     headers: {
-      "Authorization": "Bearer sk_live_...",
+      "Authorization": "Bearer bipa_live_sk_...",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({

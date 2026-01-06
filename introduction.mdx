@@ -55,7 +55,7 @@ Bipa Infra provides a complete crypto infrastructure API for Brazilian businesse
 All API requests are made to:
 
 ```
-https://api.bipa.app/v1
+https://api.bipa.tech/v1
 ```
 
 ## Quick example
@@ -66,8 +66,8 @@ Create a customer and execute a BRL to USDT trade:
 
 ```bash cURL
 # Create a customer
-curl -X POST https://api.bipa.app/v1/customers \
-  -H "Authorization: Bearer sk_live_..." \
+curl -X POST https://api.bipa.tech/v1/customers \
+  -H "Authorization: Bearer bipa_live_sk_..." \
   -H "Content-Type: application/json" \
   -d '{
     "type": "individual",
@@ -77,12 +77,12 @@ curl -X POST https://api.bipa.app/v1/customers \
   }'
 
 # Get a quote
-curl "https://api.bipa.app/v1/quotes?from=BRL&to=USDT&amount_cents=100000" \
-  -H "Authorization: Bearer sk_live_..."
+curl "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000" \
+  -H "Authorization: Bearer bipa_live_sk_..."
 
 # Execute the trade
-curl -X POST https://api.bipa.app/v1/quotes/quote_abc123/execute \
-  -H "Authorization: Bearer sk_live_..." \
+curl -X POST https://api.bipa.tech/v1/quotes/quote_abc123/execute \
+  -H "Authorization: Bearer bipa_live_sk_..." \
   -H "Content-Type: application/json" \
   -d '{"customer_id": "cus_a1b2c3d4e5f6"}'
 ```
@@ -91,13 +91,13 @@ curl -X POST https://api.bipa.app/v1/quotes/quote_abc123/execute \
 import requests
 
 headers = {
-    "Authorization": "Bearer sk_live_...",
+    "Authorization": "Bearer bipa_live_sk_...",
     "Content-Type": "application/json"
 }
 
 # Create a customer
 customer = requests.post(
-    "https://api.bipa.app/v1/customers",
+    "https://api.bipa.tech/v1/customers",
     headers=headers,
     json={
         "type": "individual",
@@ -109,14 +109,14 @@ customer = requests.post(
 
 # Get a quote
 quote = requests.get(
-    "https://api.bipa.app/v1/quotes",
+    "https://api.bipa.tech/v1/quotes",
     headers=headers,
     params={"from": "BRL", "to": "USDT", "amount_cents": 100000}
 ).json()
 
 # Execute the trade
 trade = requests.post(
-    f"https://api.bipa.app/v1/quotes/{quote['id']}/execute",
+    f"https://api.bipa.tech/v1/quotes/{quote['id']}/execute",
     headers=headers,
     json={"customer_id": customer["id"]}
 ).json()
@@ -124,12 +124,12 @@ trade = requests.post(
 
 ```javascript Node.js
 const headers = {
-  "Authorization": "Bearer sk_live_...",
+  "Authorization": "Bearer bipa_live_sk_...",
   "Content-Type": "application/json"
 };
 
 // Create a customer
-const customer = await fetch("https://api.bipa.app/v1/customers", {
+const customer = await fetch("https://api.bipa.tech/v1/customers", {
   method: "POST",
   headers,
   body: JSON.stringify({
@@ -142,13 +142,13 @@ const customer = await fetch("https://api.bipa.app/v1/customers", {
 
 // Get a quote
 const quote = await fetch(
-  "https://api.bipa.app/v1/quotes?from=BRL&to=USDT&amount_cents=100000",
+  "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000",
   { headers }
 ).then(r => r.json());
 
 // Execute the trade
 const trade = await fetch(
-  `https://api.bipa.app/v1/quotes/${quote.id}/execute`,
+  `https://api.bipa.tech/v1/quotes/${quote.id}/execute`,
   {
     method: "POST",
     headers,
