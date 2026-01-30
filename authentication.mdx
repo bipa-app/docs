@@ -76,7 +76,7 @@ resp, _ := client.Do(req)
 4. Copy your key immediately — it won't be shown again
 
 <Note>
-  You can create multiple API keys for different services or environments. Each key can be revoked independently.
+  You can only have one active API key at a time. Creating a new key will revoke the previous one.
 </Note>
 
 ## Sandbox environment
@@ -133,8 +133,8 @@ Common authentication issues:
   <Accordion title="Rotate keys regularly">
     Create new keys periodically and revoke old ones. This limits the impact if a key is compromised.
   </Accordion>
-  <Accordion title="Use separate keys per service">
-    Create different API keys for different services or environments. This makes it easier to revoke access if needed.
+  <Accordion title="Revoke compromised keys immediately">
+    If you suspect a key has been compromised, create a new one immediately. This will automatically revoke the old key.
   </Accordion>
   <Accordion title="Monitor API usage">
     Review your API logs in the console regularly to detect unusual activity.
