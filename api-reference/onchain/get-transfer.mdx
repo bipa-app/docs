@@ -216,7 +216,7 @@ console.log(`Gross: ${toHuman(transfer.amount_gross, d)}, Net: ${toHuman(transfe
 
 ## Tracking confirmations
 
-For pending transfers, you can poll the status or use webhooks:
+For pending transfers, you can poll the status or use the Events API:
 
 ```python
 import time
@@ -248,5 +248,5 @@ def wait_for_confirmation(transfer_id: str, timeout: int = 3600):
 ```
 
 <Tip>
-  Using webhooks is more efficient than polling. Subscribe to `onchain.transfer.confirmed` events.
+  Using the [Events API](/api-reference/partner/events/overview) is more efficient than polling. Poll for `usdt_withdrawal` events with `settled` or `failed` log types.
 </Tip>

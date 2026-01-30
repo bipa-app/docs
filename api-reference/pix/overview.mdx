@@ -36,13 +36,15 @@ sequenceDiagram
     App-->>User: Display QR code
     User->>Pix: Pay via bank app
     Pix->>Bipa: Payment notification
-    Bipa->>App: Webhook (pix.received)
+    Note over Bipa: Event created (pix_inflow)
+    App->>Bipa: Poll Events API
+    Bipa-->>App: pix_inflow event (credited)
 
     Note over App,Bipa: Cash-out Flow
     App->>Bipa: Create payout
     Bipa->>Pix: Send Pix
     Pix-->>Bipa: Confirmation
-    Bipa->>App: Webhook (pix.completed)
+    Bipa-->>App: Payout response (completed)
 ```
 
 ## Pix key types
@@ -139,12 +141,12 @@ All monetary amounts are returned as **string-encoded integers** in centavos (BR
   Contact us for higher limits on business accounts.
 </Tip>
 
-## Webhooks
+## Tracking transactions
 
-Subscribe to these events to track Pix transaction lifecycle:
+Use the [Events API](/api-reference/partner/events/overview) to track Pix transaction lifecycle changes. Events are generated for:
 
-| Event | Description |
-|-------|-------------|
-| `pix.received` | Incoming payment received (cash-in) |
-| `pix.completed` | Outgoing payout completed (cash-out) |
-| `pix.failed` | Transaction failed |
+| Event kind | Log types | Description |
+|------------|-----------|-------------|
+| `pix_inflow` | `created`, `credited`, `failed` | Incoming payment lifecycle |
+
+Poll for undelivered events regularly and mark them as delivered after processing.

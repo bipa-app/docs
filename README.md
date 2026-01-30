@@ -35,14 +35,14 @@ docs/
 ├── introduction.mdx        # Platform overview
 ├── authentication.mdx      # API authentication
 ├── errors.mdx              # Error handling
-├── webhooks.mdx            # Webhook integration
 ├── rate-limits.mdx         # Rate limiting
 ├── api-reference/
 │   ├── customers/          # Customer management
 │   ├── pix/                # Pix payments
 │   ├── quotes/             # Currency quotes
 │   ├── onchain/            # On-chain transfers
-│   └── balances/           # Balances & transactions
+│   ├── balances/           # Balances & transactions
+│   └── partner/            # Partner API (events, PIX keys, withdrawals)
 ├── docs.json               # Mintlify configuration
 └── logo/                   # Bipa logos
 ```
