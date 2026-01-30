@@ -19,7 +19,6 @@
               "introduction",
               "authentication",
               "errors",
-              "webhooks",
               "rate-limits"
             ]
           }
@@ -80,6 +79,56 @@
               "api-reference/balances/overview",
               "api-reference/balances/get-balances",
               "api-reference/balances/get-transactions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Partner API",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api-reference/partner/introduction",
+              "api-reference/partner/authentication"
+            ]
+          },
+          {
+            "group": "Events",
+            "pages": [
+              "api-reference/partner/events/overview",
+              "api-reference/partner/events/list-events",
+              "api-reference/partner/events/mark-delivered"
+            ]
+          },
+          {
+            "group": "PIX Keys",
+            "pages": [
+              "api-reference/partner/pix-keys/overview",
+              "api-reference/partner/pix-keys/create-pix-key",
+              "api-reference/partner/pix-keys/get-pix-key",
+              "api-reference/partner/pix-keys/delete-pix-key"
+            ]
+          },
+          {
+            "group": "PIX Inflows",
+            "pages": [
+              "api-reference/partner/pix-in/overview",
+              "api-reference/partner/pix-in/list-inflows"
+            ]
+          },
+          {
+            "group": "Customers",
+            "pages": [
+              "api-reference/partner/customers/overview",
+              "api-reference/partner/customers/create-business"
+            ]
+          },
+          {
+            "group": "USDT Withdrawals",
+            "pages": [
+              "api-reference/partner/withdrawals/overview",
+              "api-reference/partner/withdrawals/create-withdrawal"
             ]
           }
         ]

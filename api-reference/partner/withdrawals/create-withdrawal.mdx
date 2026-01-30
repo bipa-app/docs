@@ -1,0 +1,248 @@
+---
+title: "Create USDT Withdrawal"
+description: "Initiate a USDT withdrawal to a blockchain address for a partner user."
+api: "POST https://api.bipa.tech/partner/v1/withdrawals/usdt"
+---
+
+## Request
+
+Create a USDT withdrawal request to send funds from a user's balance to an external blockchain address.
+
+### Body parameters
+
+<ParamField body="document" type="string" required>
+  User's CPF (11 digits) or CNPJ (14 digits). Can be formatted or unformatted.
+</ParamField>
+
+<ParamField body="idempotency_key" type="string" required>
+  Unique identifier (UUID) to prevent duplicate withdrawals
+</ParamField>
+
+<ParamField body="address" type="string" required>
+  Destination blockchain address. Must be a valid EVM address (0x followed by 40 hex characters).
+</ParamField>
+
+<ParamField body="usdtmicros" type="integer" required>
+  Amount to withdraw in USDT micros (6 decimals). Must be greater than 0.
+  Example: `100000000` = 100 USDT
+</ParamField>
+
+<ParamField body="fee_choice" type="string" required>
+  Network fee priority: `LOW`, `MEDIUM`, or `HIGH`
+</ParamField>
+
+<ParamField body="network" type="string" required>
+  Blockchain network: `ETH` (Ethereum) or `MATIC` (Polygon)
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="integer">
+  Unique withdrawal identifier
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST https://api.bipa.tech/partner/v1/withdrawals/usdt \
+  -H "X-API-Key: your_partner_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "12345678900",
+    "idempotency_key": "550e8400-e29b-41d4-a716-446655440000",
+    "address": "0xabcdef1234567890abcdef1234567890abcdef12",
+    "usdtmicros": 100000000,
+    "fee_choice": "MEDIUM",
+    "network": "MATIC"
+  }'
+```
+
+```python Python
+import requests
+import uuid
+
+response = requests.post(
+    "https://api.bipa.tech/partner/v1/withdrawals/usdt",
+    headers={
+        "X-API-Key": "your_partner_api_key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "document": "12345678900",
+        "idempotency_key": str(uuid.uuid4()),
+        "address": "0xabcdef1234567890abcdef1234567890abcdef12",
+        "usdtmicros": 100000000,  # 100 USDT
+        "fee_choice": "MEDIUM",
+        "network": "MATIC"
+    }
+)
+
+if response.status_code == 201:
+    withdrawal = response.json()
+    print(f"Withdrawal created: {withdrawal['id']}")
+else:
+    error = response.json()
+    print(f"Error: {error['error']}")
+```
+
+```javascript Node.js
+import { randomUUID } from "crypto";
+
+const response = await fetch(
+  "https://api.bipa.tech/partner/v1/withdrawals/usdt",
+  {
+    method: "POST",
+    headers: {
+      "X-API-Key": "your_partner_api_key",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      document: "12345678900",
+      idempotency_key: randomUUID(),
+      address: "0xabcdef1234567890abcdef1234567890abcdef12",
+      usdtmicros: 100000000, // 100 USDT
+      fee_choice: "MEDIUM",
+      network: "MATIC"
+    })
+  }
+);
+
+if (response.status === 201) {
+  const withdrawal = await response.json();
+  console.log(`Withdrawal created: ${withdrawal.id}`);
+} else {
+  const error = await response.json();
+  console.log(`Error: ${error.error}`);
+}
+```
+
+```go Go
+import (
+    "bytes"
+    "encoding/json"
+    "net/http"
+    "github.com/google/uuid"
+)
+
+payload := map[string]interface{}{
+    "document":        "12345678900",
+    "idempotency_key": uuid.New().String(),
+    "address":         "0xabcdef1234567890abcdef1234567890abcdef12",
+    "usdtmicros":      100000000, // 100 USDT
+    "fee_choice":      "MEDIUM",
+    "network":         "MATIC",
+}
+body, _ := json.Marshal(payload)
+
+req, _ := http.NewRequest("POST", "https://api.bipa.tech/partner/v1/withdrawals/usdt", bytes.NewBuffer(body))
+req.Header.Set("X-API-Key", "your_partner_api_key")
+req.Header.Set("Content-Type", "application/json")
+
+client := &http.Client{}
+resp, _ := client.Do(req)
+```
+</RequestExample>
+
+<ResponseExample>
+```json 201 Created
+{
+  "id": 12345
+}
+```
+
+```json 200 OK (idempotent - already created)
+{
+  "id": 12345
+}
+```
+
+```json 400 Invalid Address
+{
+  "error": "invalid_address"
+}
+```
+
+```json 404 User Not Found
+{
+  "error": "user_not_found"
+}
+```
+
+```json 422 Insufficient Funds
+{
+  "error": "insufficient_funds"
+}
+```
+
+```json 422 Invalid Amount
+{
+  "error": "invalid_amount"
+}
+```
+
+```json 422 Invalid Fee
+{
+  "error": "invalid_fee"
+}
+```
+
+```json 500 Internal Error
+{
+  "error": "internal_error"
+}
+```
+</ResponseExample>
+
+## Amount calculation
+
+Use this formula to convert USDT to micros:
+
+```python
+# Python
+usdt_amount = 100  # 100 USDT
+usdtmicros = usdt_amount * 1_000_000  # 100000000
+```
+
+```javascript
+// JavaScript
+const usdtAmount = 100; // 100 USDT
+const usdtmicros = usdtAmount * 1_000_000; // 100000000
+```
+
+## Network comparison
+
+| Aspect | Ethereum (ETH) | Polygon (MATIC) |
+|--------|----------------|-----------------|
+| Speed | ~15 seconds | ~2 seconds |
+| Fees | Higher (variable) | Lower (fixed ~1 USDT) |
+| Confirmations | More secure | Fast finality |
+
+<Tip>
+  For most use cases, Polygon offers the best balance of speed and cost. Use Ethereum when recipients specifically require mainnet USDT.
+</Tip>
+
+## Tracking the withdrawal
+
+After creating a withdrawal:
+
+1. Store the returned `id` for reference
+2. Poll the Events API for `usdt_withdrawal` events
+3. The `sent` event will include the `tx_hash` for blockchain tracking
+4. The `settled` event confirms the transaction is complete
+
+Example event payload:
+```json
+{
+  "id": "event-uuid",
+  "kind": "usdt_withdrawal",
+  "log": {
+    "kind": "settled",
+    "tx_hash": "0x123abc456def...",
+    "network": "polygon",
+    "amount_usdtmicros": 100000000
+  }
+}
+```
+
+<Warning>
+  Always verify sufficient balance before initiating withdrawals. The `insufficient_funds` error indicates the user doesn't have enough USDT to cover the withdrawal amount plus network fees.
+</Warning>

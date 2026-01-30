@@ -1,0 +1,109 @@
+---
+title: "Partner API Introduction"
+description: "Integrate Bipa's infrastructure directly into your platform with the Partner API."
+---
+
+## Overview
+
+The Partner API enables B2B partners to integrate Bipa's payment infrastructure directly into their platforms. This API provides programmatic access to manage PIX keys, receive PIX payments, onboard business customers, and process USDT withdrawals on behalf of your users.
+
+<Note>
+  The Partner API is separate from the main Bipa API and uses different authentication. See [Authentication](/api-reference/partner/authentication) for details.
+</Note>
+
+## Base URL
+
+All Partner API endpoints use the following base URL:
+
+```
+https://api.bipa.tech/partner/v1
+```
+
+## Capabilities
+
+<CardGroup cols={2}>
+  <Card title="PIX Key Management" icon="key" href="/api-reference/partner/pix-keys/overview">
+    Create, retrieve, and delete PIX keys for your users
+  </Card>
+  <Card title="PIX Inflows" icon="arrow-down" href="/api-reference/partner/pix-in/overview">
+    Track incoming PIX payments received by your users
+  </Card>
+  <Card title="Event Tracking" icon="bell" href="/api-reference/partner/events/overview">
+    Monitor infrastructure events and delivery status
+  </Card>
+  <Card title="Business Onboarding" icon="building" href="/api-reference/partner/customers/overview">
+    Onboard business customers with full KYC
+  </Card>
+  <Card title="USDT Withdrawals" icon="coins" href="/api-reference/partner/withdrawals/overview">
+    Process USDT withdrawals to blockchain addresses
+  </Card>
+</CardGroup>
+
+## Key differences from main API
+
+| Aspect | Main API | Partner API |
+|--------|----------|-------------|
+| Authentication | Bearer token | X-API-Key header |
+| Base URL | `/v1` | `/partner/v1` |
+| Timestamps | ISO 8601 | Unix timestamps (seconds) |
+| Target users | End customers | B2B partners |
+
+## Health check
+
+Verify API connectivity with a simple health check:
+
+```bash
+curl https://api.bipa.tech/partner/v1/health \
+  -H "X-API-Key: your_partner_api_key"
+```
+
+Response:
+```json
+{
+  "status": "ok"
+}
+```
+
+## Idempotency
+
+Several endpoints support idempotency keys to safely retry requests without causing duplicate operations. When supported, include an `idempotency_key` field (UUID format) in your request body.
+
+<Tip>
+  Always use idempotency keys for operations that create resources or initiate transactions.
+</Tip>
+
+## Error handling
+
+Partner API errors follow a consistent format:
+
+```json
+{
+  "error": "error_code",
+  "message": "Human-readable error description"
+}
+```
+
+Common HTTP status codes:
+
+| Status | Description |
+|--------|-------------|
+| `200` | Success |
+| `201` | Resource created |
+| `202` | Request accepted for processing |
+| `400` | Bad request (invalid input) |
+| `401` | Unauthorized (invalid API key) |
+| `404` | Resource not found |
+| `409` | Conflict (resource already exists) |
+| `422` | Unprocessable entity (business logic error) |
+| `500` | Internal server error |
+
+## Getting started
+
+1. **Obtain your API key** - Contact your Bipa representative
+2. **Test connectivity** - Call the health check endpoint
+3. **Explore the API** - Review the endpoint documentation
+4. **Implement event polling** - Set up event handling via the Events API
+
+<Warning>
+  The Partner API is intended for server-to-server communication only. Never expose your API key in client-side applications.
+</Warning>

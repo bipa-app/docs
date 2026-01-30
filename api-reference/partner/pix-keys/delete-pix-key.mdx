@@ -1,0 +1,162 @@
+---
+title: "Delete PIX Key"
+description: "Delete a PIX key for a partner user."
+api: "DELETE https://api.bipa.tech/partner/v1/pix-key/{document}"
+---
+
+## Request
+
+Delete the PIX key registered for a user identified by their document (CPF or CNPJ). This operation is asynchronous.
+
+### Path parameters
+
+<ParamField path="document" type="string" required>
+  User's CPF (11 digits) or CNPJ (14 digits). Can be formatted or unformatted.
+</ParamField>
+
+### Body parameters
+
+<ParamField body="idempotency_key" type="string" required>
+  Unique identifier (UUID) to prevent duplicate requests
+</ParamField>
+
+## Response
+
+<ResponseField name="status" type="string">
+  Deletion status:
+  - `accepted` - Deletion request created, processing in progress
+  - `already_sent` - Deletion was already requested
+  - `succeeded` - Deletion completed
+  - `not_found` - PIX key not found for this user
+  - `invalid_document` - Document format is invalid
+  - `failed` - Deletion failed due to an error
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X DELETE https://api.bipa.tech/partner/v1/pix-key/12345678900 \
+  -H "X-API-Key: your_partner_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idempotency_key": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+```python Python
+import requests
+import uuid
+
+document = "12345678900"
+
+response = requests.delete(
+    f"https://api.bipa.tech/partner/v1/pix-key/{document}",
+    headers={
+        "X-API-Key": "your_partner_api_key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "idempotency_key": str(uuid.uuid4())
+    }
+)
+
+result = response.json()
+print(f"Deletion status: {result['status']}")
+```
+
+```javascript Node.js
+import { randomUUID } from "crypto";
+
+const document = "12345678900";
+
+const response = await fetch(
+  `https://api.bipa.tech/partner/v1/pix-key/${document}`,
+  {
+    method: "DELETE",
+    headers: {
+      "X-API-Key": "your_partner_api_key",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      idempotency_key: randomUUID()
+    })
+  }
+);
+
+const result = await response.json();
+console.log(`Deletion status: ${result.status}`);
+```
+
+```go Go
+import (
+    "bytes"
+    "encoding/json"
+    "net/http"
+    "github.com/google/uuid"
+)
+
+document := "12345678900"
+url := fmt.Sprintf("https://api.bipa.tech/partner/v1/pix-key/%s", document)
+
+payload := map[string]string{
+    "idempotency_key": uuid.New().String(),
+}
+body, _ := json.Marshal(payload)
+
+req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
+req.Header.Set("X-API-Key", "your_partner_api_key")
+req.Header.Set("Content-Type", "application/json")
+
+client := &http.Client{}
+resp, _ := client.Do(req)
+```
+</RequestExample>
+
+<ResponseExample>
+```json 202 Accepted
+{
+  "status": "accepted"
+}
+```
+
+```json 200 OK (already processed)
+{
+  "status": "already_sent"
+}
+```
+
+```json 200 OK (completed)
+{
+  "status": "succeeded"
+}
+```
+
+```json 404 Not Found
+{
+  "status": "not_found"
+}
+```
+
+```json 400 Bad Request
+{
+  "status": "invalid_document"
+}
+```
+
+```json 500 Internal Server Error
+{
+  "status": "failed"
+}
+```
+</ResponseExample>
+
+<Warning>
+  Deleting a PIX key is permanent. Once deleted, the user will no longer be able to receive payments using that key. A new key can be created if needed.
+</Warning>
+
+## After deleting a PIX key
+
+The deletion is processed asynchronously. Monitor the Events API for a `pix_key` event with `kind: canceled` to confirm the deletion is complete.
+
+<Note>
+  It may take a few minutes for the key deletion to propagate through the PIX network. During this time, payments sent to the old key may still be processed.
+</Note>

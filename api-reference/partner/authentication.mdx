@@ -1,0 +1,124 @@
+---
+title: "Authentication"
+description: "Secure your Partner API requests with API key authentication."
+---
+
+## API Key Authentication
+
+All Partner API requests require authentication using an API key passed in the `X-API-Key` header.
+
+```bash
+X-API-Key: your_partner_api_key
+```
+
+<Warning>
+  The Partner API uses `X-API-Key` header authentication, which is different from the main API's Bearer token authentication.
+</Warning>
+
+## Making authenticated requests
+
+Include your API key in the `X-API-Key` header of every request:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.bipa.tech/partner/v1/health \
+  -H "X-API-Key: your_partner_api_key" \
+  -H "Content-Type: application/json"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.bipa.tech/partner/v1/health",
+    headers={
+        "X-API-Key": "your_partner_api_key",
+        "Content-Type": "application/json"
+    }
+)
+```
+
+```javascript Node.js
+const response = await fetch("https://api.bipa.tech/partner/v1/health", {
+  headers: {
+    "X-API-Key": "your_partner_api_key",
+    "Content-Type": "application/json"
+  }
+});
+```
+
+```go Go
+req, _ := http.NewRequest("GET", "https://api.bipa.tech/partner/v1/health", nil)
+req.Header.Set("X-API-Key", "your_partner_api_key")
+req.Header.Set("Content-Type", "application/json")
+
+client := &http.Client{}
+resp, _ := client.Do(req)
+```
+
+</CodeGroup>
+
+## Obtaining API keys
+
+Partner API keys are provisioned by Bipa during the partner onboarding process. Contact your Bipa representative to obtain your API key.
+
+<Note>
+  Each partner organization receives a unique API key. Keep your key secure and never share it publicly.
+</Note>
+
+## Authentication errors
+
+If authentication fails, you'll receive a `401 Unauthorized` response:
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid or missing API key"
+}
+```
+
+Common authentication issues:
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `401 Unauthorized` | Missing `X-API-Key` header | Include the header in your request |
+| `401 Unauthorized` | Invalid API key | Verify the key is correct and active |
+| `401 Unauthorized` | Revoked API key | Contact Bipa to obtain a new key |
+
+## Security best practices
+
+<AccordionGroup>
+  <Accordion title="Use environment variables">
+    Store API keys in environment variables, not in code:
+    ```bash
+    export BIPA_PARTNER_API_KEY=your_partner_api_key
+    ```
+    ```python
+    import os
+    api_key = os.environ.get("BIPA_PARTNER_API_KEY")
+    ```
+  </Accordion>
+  <Accordion title="Never expose keys in client-side code">
+    Partner API keys should only be used in server-to-server communications. Never include them in frontend applications or mobile apps.
+  </Accordion>
+  <Accordion title="Rotate keys if compromised">
+    If you suspect your API key has been compromised, contact Bipa immediately to revoke the key and obtain a new one.
+  </Accordion>
+  <Accordion title="Use HTTPS only">
+    Always use HTTPS when making API requests. HTTP requests will be rejected.
+  </Accordion>
+</AccordionGroup>
+
+## Request logging
+
+All Partner API requests are logged for audit purposes. Logs include:
+
+- Request path and method
+- Response status code
+- Timestamp
+- Request tracing ID
+
+<Tip>
+  Use the tracing ID from response headers when contacting support about specific requests.
+</Tip>

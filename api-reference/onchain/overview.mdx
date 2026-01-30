@@ -113,13 +113,15 @@ sequenceDiagram
     Note over User,Chain: User sends crypto
 
     Chain->>Bipa: Transaction detected
-    Bipa->>App: Webhook (onchain.transfer.pending)
+    Note over Bipa: Transfer status: processing
 
     Note over Chain: Confirmations...
 
     Chain->>Bipa: Confirmations complete
-    Bipa->>App: Webhook (onchain.transfer.confirmed)
+    Note over Bipa: Transfer status: confirmed
     Note over Bipa: Balance credited
+    App->>Bipa: GET /transfers/{id}
+    Bipa-->>App: Transfer (confirmed)
 ```
 
 ## Outbound transfer flow
@@ -131,15 +133,17 @@ sequenceDiagram
     participant Chain as Blockchain
 
     App->>Bipa: Create transfer (outbound)
-    Bipa-->>App: Transfer pending
+    Bipa-->>App: Transfer (pending)
 
     Bipa->>Chain: Broadcast transaction
-    Bipa->>App: Webhook (processing)
+    Note over Bipa: Event created (usdt_withdrawal: sent)
 
     Note over Chain: Transaction confirms
 
     Chain-->>Bipa: Confirmed
-    Bipa->>App: Webhook (onchain.transfer.confirmed)
+    Note over Bipa: Event created (usdt_withdrawal: settled)
+    App->>Bipa: Poll Events API
+    Bipa-->>App: usdt_withdrawal event (settled)
 ```
 
 ## Endpoints
@@ -305,10 +309,15 @@ When sending 100 USDT on Polygon (1 USDT fee):
 | `amount_gross` | `"101000000"` | 101.000000 USDT (deducted from balance) |
 | `decimals` | `6` | — |
 
-## Webhooks
+## Tracking transfers
 
-| Event | Description |
-|-------|-------------|
-| `onchain.transfer.pending` | Transfer detected, awaiting confirmations |
-| `onchain.transfer.confirmed` | Transfer confirmed and processed |
-| `onchain.transfer.failed` | Transfer failed |
+Use the [Events API](/api-reference/partner/events/overview) to track transfer lifecycle changes. For USDT withdrawals, events are generated with the following log types:
+
+| Log type | Description |
+|----------|-------------|
+| `created` | Withdrawal request created |
+| `sent` | Transaction broadcast to blockchain |
+| `settled` | Transaction confirmed on blockchain |
+| `failed` | Withdrawal failed |
+
+Poll for undelivered events regularly and mark them as delivered after processing.
