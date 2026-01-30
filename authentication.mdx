@@ -1,14 +1,14 @@
 ---
 title: "Authentication"
-description: "Secure your API requests with Bearer token authentication."
+description: "Secure your API requests with X-API-Key authentication."
 ---
 
 ## API Keys
 
-All API requests require authentication using Bearer tokens. Include your API key in the `Authorization` header of every request.
+All API requests require authentication using an API key. Include your API key in the `X-API-Key` header of every request.
 
 ```bash
-Authorization: Bearer sk_live_xxxxxxxxxxxx
+X-API-Key: bipa_prod_xxxxxxxxxxxx
 ```
 
 ## Key types
@@ -17,8 +17,8 @@ Bipa provides two types of API keys:
 
 | Prefix | Environment | Purpose |
 |--------|-------------|---------|
-| `bipa_live_sk_` | Production | Real transactions with real money |
-| `bipa_test_sk_` | Sandbox | Testing and development |
+| `bipa_prod_` | Production | Real transactions with real money |
+| `bipa_test_` | Sandbox | Testing and development |
 
 <Warning>
   Never expose your API keys in client-side code, public repositories, or logs. Treat them like passwords.
@@ -26,13 +26,13 @@ Bipa provides two types of API keys:
 
 ## Making authenticated requests
 
-Include your API key in the `Authorization` header:
+Include your API key in the `X-API-Key` header:
 
 <CodeGroup>
 
 ```bash cURL
 curl https://api.bipa.tech/v1/customers \
-  -H "Authorization: Bearer bipa_live_sk_xxxxxxxxxxxx" \
+  -H "X-API-Key: bipa_prod_xxxxxxxxxxxx" \
   -H "Content-Type: application/json"
 ```
 
@@ -42,7 +42,7 @@ import requests
 response = requests.get(
     "https://api.bipa.tech/v1/customers",
     headers={
-        "Authorization": "Bearer bipa_live_sk_xxxxxxxxxxxx",
+        "X-API-Key": "bipa_prod_xxxxxxxxxxxx",
         "Content-Type": "application/json"
     }
 )
@@ -51,7 +51,7 @@ response = requests.get(
 ```javascript Node.js
 const response = await fetch("https://api.bipa.tech/v1/customers", {
   headers: {
-    "Authorization": "Bearer bipa_live_sk_xxxxxxxxxxxx",
+    "X-API-Key": "bipa_prod_xxxxxxxxxxxx",
     "Content-Type": "application/json"
   }
 });
@@ -59,7 +59,7 @@ const response = await fetch("https://api.bipa.tech/v1/customers", {
 
 ```go Go
 req, _ := http.NewRequest("GET", "https://api.bipa.tech/v1/customers", nil)
-req.Header.Set("Authorization", "Bearer bipa_live_sk_xxxxxxxxxxxx")
+req.Header.Set("X-API-Key", "bipa_prod_xxxxxxxxxxxx")
 req.Header.Set("Content-Type", "application/json")
 
 client := &http.Client{}
@@ -85,7 +85,7 @@ The sandbox environment uses the same base URL but with test API keys:
 
 ```bash
 curl https://api.bipa.tech/v1/customers \
-  -H "Authorization: Bearer sk_test_xxxxxxxxxxxx"
+  -H "X-API-Key: bipa_test_xxxxxxxxxxxx"
 ```
 
 In sandbox mode:
@@ -115,7 +115,7 @@ Common authentication issues:
 |------------|-------|----------|
 | `invalid_api_key` | Key doesn't exist or is malformed | Check the key format and copy it again |
 | `revoked_api_key` | Key has been revoked | Generate a new key in the console |
-| `missing_authorization` | No `Authorization` header | Include the header in your request |
+| `missing_api_key` | No `X-API-Key` header | Include the header in your request |
 
 ## Security best practices
 
@@ -123,7 +123,7 @@ Common authentication issues:
   <Accordion title="Use environment variables">
     Store API keys in environment variables, not in code:
     ```bash
-    export BIPA_API_KEY=sk_live_xxxxxxxxxxxx
+    export BIPA_API_KEY=bipa_prod_xxxxxxxxxxxx
     ```
     ```python
     import os

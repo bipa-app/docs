@@ -121,7 +121,7 @@ Create a quote for converting between currencies. The quote locks in a price for
 <RequestExample>
 ```bash cURL - Spend R$ 1,000 (gross) to buy BTC
 curl -X POST https://api.bipa.tech/v1/quotes \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -136,7 +136,7 @@ curl -X POST https://api.bipa.tech/v1/quotes \
 
 ```bash cURL - Buy exactly 0.001 BTC (net)
 curl -X POST https://api.bipa.tech/v1/quotes \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -151,7 +151,7 @@ curl -X POST https://api.bipa.tech/v1/quotes \
 
 ```bash cURL - Sell 100 USDT for BRL
 curl -X POST https://api.bipa.tech/v1/quotes \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -170,7 +170,7 @@ import requests
 response = requests.post(
     "https://api.bipa.tech/v1/quotes",
     headers={
-        "Authorization": "Bearer bipa_live_sk_...",
+        "X-API-Key": "bipa_prod_...",
         "Content-Type": "application/json"
     },
     json={
@@ -204,7 +204,7 @@ print(f"  Bipa: R$ {int(quote['fees']['bipa']) / 10**from_decimals:.2f}")
 const response = await fetch("https://api.bipa.tech/v1/quotes", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer bipa_live_sk_...",
+    "X-API-Key": "bipa_prod_...",
     "Content-Type": "application/json"
   },
   body: JSON.stringify({

@@ -101,14 +101,14 @@ Returns the completed trade object.
 <RequestExample>
 ```bash cURL
 curl -X POST https://api.bipa.tech/v1/quotes/quote_abc123xyz/execute \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 ```
 
 ```python Python
 import requests
 
 headers = {
-    "Authorization": "Bearer bipa_live_sk_...",
+    "X-API-Key": "bipa_prod_...",
     "Content-Type": "application/json"
 }
 
@@ -142,7 +142,7 @@ print(f"Received: {int(trade['to_amount']) / 10**trade['to_decimals']:.8f} BTC")
 
 ```javascript Node.js
 const headers = {
-  "Authorization": "Bearer bipa_live_sk_...",
+  "X-API-Key": "bipa_prod_...",
   "Content-Type": "application/json"
 };
 
@@ -258,7 +258,7 @@ from decimal import Decimal
 class BipaQuoteClient:
     def __init__(self, api_key: str):
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "X-API-Key": f"{api_key}",
             "Content-Type": "application/json"
         }
         self.base_url = "https://api.bipa.tech/v1"
@@ -320,7 +320,7 @@ class BipaQuoteClient:
 
 
 # Usage
-client = BipaQuoteClient("bipa_live_sk_...")
+client = BipaQuoteClient("bipa_prod_...")
 
 # Buy BTC with R$ 1,000 + 0.5% partner fee
 trade = client.convert(

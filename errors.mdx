@@ -164,7 +164,7 @@ import requests
 try:
     response = requests.post(
         "https://api.bipa.tech/v1/customers",
-        headers={"Authorization": "Bearer bipa_live_sk_..."},
+        headers={"X-API-Key": "bipa_prod_..."},
         json={"type": "individual", "name": "João"}
     )
     response.raise_for_status()
@@ -188,7 +188,7 @@ try {
   const response = await fetch("https://api.bipa.tech/v1/customers", {
     method: "POST",
     headers: {
-      "Authorization": "Bearer bipa_live_sk_...",
+      "X-API-Key": "bipa_prod_...",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ type: "individual", name: "João" })
