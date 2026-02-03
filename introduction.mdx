@@ -1,22 +1,13 @@
 ---
 title: "Introduction"
-description: "Crypto as a Service API for Brazilian businesses. Process payments, manage wallets, and enable 24/7 trading."
+description: "Crypto as a Service infrastructure for Brazilian businesses."
 ---
 
 ## Welcome to Bipa Infra
 
-Bipa Infra provides a complete crypto infrastructure API for Brazilian businesses. Integrate Bitcoin, stablecoins, and Pix payments into your product in weeks, not months.
+Bipa Infra provides crypto infrastructure for Brazilian businesses. Integrate Bitcoin, stablecoins, and Pix payments into your product.
 
-<CardGroup cols={2}>
-  <Card title="Quick Start" icon="rocket" href="/authentication">
-    Get your API keys and make your first request in minutes.
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/customers/overview">
-    Explore the complete API documentation with code examples.
-  </Card>
-</CardGroup>
-
-## What you can build
+## What we offer
 
 <CardGroup cols={2}>
   <Card title="Pix Payments" icon="bolt">
@@ -35,144 +26,29 @@ Bipa Infra provides a complete crypto infrastructure API for Brazilian businesse
 
 ## Why Bipa Infra
 
-<AccordionGroup>
-  <Accordion title="Battle-tested infrastructure">
-    R$4 billion+ processed and 300,000+ users served since 2021. Our infrastructure powers some of Brazil's largest crypto applications.
-  </Accordion>
-  <Accordion title="Regulatory compliance">
-    We operate as a licensed VASP and Payment Institution with indirect Pix participation. Your compliance burden is minimized.
-  </Accordion>
-  <Accordion title="Smart order routing">
-    Our engine queries multiple exchange order books simultaneously to find the best price for every trade.
-  </Accordion>
-  <Accordion title="Institutional custody">
-    Multi-signature wallets powered by Fireblocks ensure your customers' assets are secured to institutional standards.
-  </Accordion>
-</AccordionGroup>
+### Battle-tested infrastructure
 
-## Base URL
+R$4 billion+ processed and 300,000+ users served since 2021. Our infrastructure powers some of Brazil's largest crypto applications.
 
-All API requests are made to:
+### Regulatory compliance
 
-```
-https://api.bipa.tech/v1
-```
+We operate as a licensed VASP and Payment Institution with indirect Pix participation. Your compliance burden is minimized.
 
-## Quick example
+### Smart order routing
 
-Create a customer and execute a BRL to USDT trade:
+Our engine queries multiple exchange order books simultaneously to find the best price for every trade.
 
-<CodeGroup>
+### Institutional custody
 
-```bash cURL
-# Create a customer
-curl -X POST https://api.bipa.tech/v1/customers \
-  -H "X-API-Key: bipa_prod_..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "individual",
-    "document": {"type": "cpf", "number": "12345678900"},
-    "name": "João Silva",
-    "email": "joao@example.com"
-  }'
+Multi-signature wallets powered by Fireblocks ensure your customers' assets are secured to institutional standards.
 
-# Get a quote
-curl "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000" \
-  -H "X-API-Key: bipa_prod_..."
-
-# Execute the trade
-curl -X POST https://api.bipa.tech/v1/quotes/quote_abc123/execute \
-  -H "X-API-Key: bipa_prod_..." \
-  -H "Content-Type: application/json" \
-  -d '{"customer_id": "cus_a1b2c3d4e5f6"}'
-```
-
-```python Python
-import requests
-
-headers = {
-    "X-API-Key": "bipa_prod_...",
-    "Content-Type": "application/json"
-}
-
-# Create a customer
-customer = requests.post(
-    "https://api.bipa.tech/v1/customers",
-    headers=headers,
-    json={
-        "type": "individual",
-        "document": {"type": "cpf", "number": "12345678900"},
-        "name": "João Silva",
-        "email": "joao@example.com"
-    }
-).json()
-
-# Get a quote
-quote = requests.get(
-    "https://api.bipa.tech/v1/quotes",
-    headers=headers,
-    params={"from": "BRL", "to": "USDT", "amount_cents": 100000}
-).json()
-
-# Execute the trade
-trade = requests.post(
-    f"https://api.bipa.tech/v1/quotes/{quote['id']}/execute",
-    headers=headers,
-    json={"customer_id": customer["id"]}
-).json()
-```
-
-```javascript Node.js
-const headers = {
-  "X-API-Key": "bipa_prod_...",
-  "Content-Type": "application/json"
-};
-
-// Create a customer
-const customer = await fetch("https://api.bipa.tech/v1/customers", {
-  method: "POST",
-  headers,
-  body: JSON.stringify({
-    type: "individual",
-    document: { type: "cpf", number: "12345678900" },
-    name: "João Silva",
-    email: "joao@example.com"
-  })
-}).then(r => r.json());
-
-// Get a quote
-const quote = await fetch(
-  "https://api.bipa.tech/v1/quotes?from=BRL&to=USDT&amount_cents=100000",
-  { headers }
-).then(r => r.json());
-
-// Execute the trade
-const trade = await fetch(
-  `https://api.bipa.tech/v1/quotes/${quote.id}/execute`,
-  {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ customer_id: customer.id })
-  }
-).then(r => r.json());
-```
-
-</CodeGroup>
-
-## Next steps
+## Getting started
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/authentication">
-    Learn how to authenticate your API requests.
-  </Card>
-  <Card title="Create customers" icon="user-plus" href="/api-reference/customers/overview">
-    Start onboarding your users to the platform.
-  </Card>
-  <Card title="Pix Payments" icon="bolt" href="/api-reference/pix/overview">
-    Accept and send instant Pix payments.
+    Learn how to authenticate your requests.
   </Card>
   <Card title="Error handling" icon="triangle-exclamation" href="/errors">
     Understand error responses and how to handle them.
   </Card>
 </CardGroup>
-

@@ -1,159 +1,157 @@
 ---
 title: "List Events"
-description: "Retrieve infrastructure events for your partner integration."
-api: "GET https://api.bipa.tech/partner/v1/events"
+description: "List infrastructure events for your partner account."
 ---
+
+## Endpoint
+
+```
+GET /partner/v1/events
+```
 
 ## Request
 
-Retrieve all infrastructure events for your partner. Use the `delivered` query parameter to filter by delivery status.
+### Headers
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `X-API-Key` | string | Yes | Your partner API key |
 
 ### Query parameters
 
-<ParamField query="delivered" type="boolean">
-  Filter by delivery status:
-  - `true` - Only delivered events
-  - `false` - Only undelivered events
-  - Omit - All events
-</ParamField>
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `delivered` | string | No | Filter by delivery status: `true` or `false` |
 
 ## Response
 
-<ResponseField name="events" type="array">
-  Array of event objects
-  <Expandable title="event object">
-    <ResponseField name="id" type="string">
-      Unique event identifier (UUID)
-    </ResponseField>
-    <ResponseField name="kind" type="string">
-      Event category: `pix_key`, `pix_inflow`, `user`, `usdt_withdrawal`
-    </ResponseField>
-    <ResponseField name="created_at" type="integer">
-      Unix timestamp when event was created
-    </ResponseField>
-    <ResponseField name="is_delivered" type="boolean">
-      Whether event has been marked as delivered
-    </ResponseField>
-    <ResponseField name="log" type="object">
-      Event-specific payload (structure varies by kind)
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+### Success (200 OK)
 
-<RequestExample>
-```bash cURL
-curl https://api.bipa.tech/partner/v1/events?delivered=false \
-  -H "X-API-Key: your_partner_api_key"
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.bipa.tech/partner/v1/events",
-    headers={"X-API-Key": "your_partner_api_key"},
-    params={"delivered": "false"}
-)
-
-events = response.json()
-for event in events["events"]:
-    print(f"Event {event['id']}: {event['kind']}")
-```
-
-```javascript Node.js
-const response = await fetch(
-  "https://api.bipa.tech/partner/v1/events?delivered=false",
-  {
-    headers: {
-      "X-API-Key": "your_partner_api_key"
-    }
-  }
-);
-
-const { events } = await response.json();
-events.forEach(event => {
-  console.log(`Event ${event.id}: ${event.kind}`);
-});
-```
-
-```go Go
-req, _ := http.NewRequest("GET", "https://api.bipa.tech/partner/v1/events?delivered=false", nil)
-req.Header.Set("X-API-Key", "your_partner_api_key")
-
-client := &http.Client{}
-resp, _ := client.Do(req)
-```
-</RequestExample>
-
-<ResponseExample>
-```json 200 OK
+```json
 {
   "events": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "id": "evt_abc123",
       "kind": "pix_key",
-      "created_at": 1705312200,
+      "created_at": 1704067200,
       "is_delivered": false,
       "log": {
-        "id": "660e8400-e29b-41d4-a716-446655440001",
+        "id": "log_xyz789",
         "kind": "registered",
-        "created_at": 1705312200,
-        "key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "tax_id": "***456789**",
-        "timestamp": 1705312200
-      }
-    },
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440002",
-      "kind": "pix_inflow",
-      "created_at": 1705312300,
-      "is_delivered": false,
-      "log": {
-        "id": "770e8400-e29b-41d4-a716-446655440003",
-        "kind": "credited",
-        "created_at": 1705312300,
-        "amount_cents": 10000,
-        "description": "Payment for services",
-        "end_to_end_id": "E12345678202401151030abcdef123456",
-        "method": "dict",
-        "receiver_tax_id": "***456789**",
-        "sender_name": "Maria Santos",
-        "sender_tax_id": "***123456**",
-        "sender_account_number": "12345678",
-        "sender_account_type": "checking",
-        "sender_bank_code": "001",
-        "sender_branch_code": "0001",
-        "timestamp": 1705312300
-      }
-    },
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440004",
-      "kind": "usdt_withdrawal",
-      "created_at": 1705312400,
-      "is_delivered": false,
-      "log": {
-        "id": "880e8400-e29b-41d4-a716-446655440005",
-        "kind": "settled",
-        "created_at": 1705312400,
-        "tax_id": "***456789**",
-        "amount_usdtmicros": 100000000,
-        "blockchain_address": "0xabcdef1234567890abcdef1234567890abcdef12",
-        "network": "polygon",
-        "tx_hash": "0x123abc456def789...",
-        "timestamp": 1705312400
+        "created_at": 1704067200,
+        "key": "abc123-def456-ghi789",
+        "tax_id": "12345678900",
+        "timestamp": 1704067200
       }
     }
   ]
 }
 ```
 
-```json 200 OK (empty)
+### Event kinds
+
+| Kind | Description |
+|------|-------------|
+| `pix_key` | Pix key lifecycle events |
+| `pix_inflow` | Incoming Pix payment events |
+| `user` | User account events |
+| `usdt_withdrawal` | USDT withdrawal events |
+
+### Pix Key event log
+
+```json
 {
-  "events": []
+  "id": "log_xyz789",
+  "kind": "registered",
+  "created_at": 1704067200,
+  "key": "abc123-def456-ghi789",
+  "tax_id": "12345678900",
+  "timestamp": 1704067200
 }
 ```
-</ResponseExample>
 
-<Tip>
-  Poll for undelivered events (`delivered=false`) regularly and mark them as delivered after processing to track which events you've handled.
-</Tip>
+| Log kind | Description |
+|----------|-------------|
+| `created` | Pix key creation requested |
+| `registered` | Pix key successfully registered |
+| `failed` | Pix key registration failed |
+| `canceled` | Pix key was deleted |
+
+### Pix Inflow event log
+
+```json
+{
+  "id": "log_xyz789",
+  "kind": "credited",
+  "created_at": 1704067200,
+  "amount_cents": 10000,
+  "description": "Payment",
+  "end_to_end_id": "E12345678...",
+  "method": "dict",
+  "receiver_tax_id": "12345678900",
+  "sender_name": "João Silva",
+  "sender_tax_id": "98765432100",
+  "timestamp": 1704067200
+}
+```
+
+| Log kind | Description |
+|----------|-------------|
+| `created` | Pix inflow received |
+| `credited` | Funds credited to user |
+| `failed` | Inflow processing failed |
+
+### User event log
+
+```json
+{
+  "id": "log_xyz789",
+  "kind": "opened",
+  "created_at": 1704067200,
+  "tax_id": "12345678900",
+  "account_branch_code": "0001",
+  "account_full_number": 123456,
+  "account_digit": 7,
+  "timestamp": 1704067200
+}
+```
+
+| Log kind | Description |
+|----------|-------------|
+| `opened` | User account opened |
+| `closed` | User account closed |
+
+### USDT Withdrawal event log
+
+```json
+{
+  "id": "log_xyz789",
+  "kind": "settled",
+  "created_at": 1704067200,
+  "tax_id": "12345678900",
+  "amount_usdtmicros": 100000000,
+  "blockchain_address": "0x1234...",
+  "network": "polygon",
+  "tx_hash": "0xabcd...",
+  "timestamp": 1704067200
+}
+```
+
+| Log kind | Description |
+|----------|-------------|
+| `created` | Withdrawal request created |
+| `sent` | Transaction sent to blockchain |
+| `settled` | Transaction confirmed on-chain |
+| `failed` | Withdrawal failed |
+
+## Example
+
+```bash
+# List all events
+curl https://api.bipa.tech/partner/v1/events \
+  -H "X-API-Key: your_partner_api_key"
+
+# List only pending events
+curl "https://api.bipa.tech/partner/v1/events?delivered=false" \
+  -H "X-API-Key: your_partner_api_key"
+```

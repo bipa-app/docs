@@ -1,437 +1,201 @@
 ---
 title: "Create Business Customer"
-description: "Onboard a new business customer (PJ) through your partner integration."
-api: "POST https://api.bipa.tech/partner/v1/customers/business"
+description: "Onboard a business customer with full KYC information."
 ---
+
+## Endpoint
+
+```
+POST /partner/v1/customers/business
+```
 
 ## Request
 
-Create a new business customer (empresa/PJ) with full KYC information including company details and ownership structure.
+### Headers
 
-### Body parameters
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `X-API-Key` | string | Yes | Your partner API key |
+| `Content-Type` | string | Yes | `application/json` |
 
-<ParamField body="cnpj" type="string" required>
-  Company CNPJ (14 digits). Can be formatted or unformatted.
-</ParamField>
+### Body
 
-<ParamField body="legal_name" type="string" required>
-  Registered company name (razão social)
-</ParamField>
+```json
+{
+  "cnpj": "12345678000199",
+  "legal_name": "Empresa LTDA",
+  "trade_name": "Nome Fantasia",
+  "email": "contato@empresa.com",
+  "phone": "+5511999999999",
+  "address": {
+    "street": "Rua Example",
+    "number": "123",
+    "complement": "Sala 1",
+    "neighborhood": "Centro",
+    "city": "São Paulo",
+    "state": "SP",
+    "postal_code": "01234567"
+  },
+  "owners": [
+    {
+      "owner_type": "partner",
+      "name": "João Silva",
+      "social_name": "João",
+      "document": "12345678900",
+      "email": "joao@empresa.com",
+      "phone": "+5511988888888",
+      "birth_date": "1990-01-15",
+      "nationality_country_code": "BR",
+      "tax_residence_country_code": "BR",
+      "address": {
+        "street": "Rua Residencial",
+        "number": "456",
+        "complement": "Apto 101",
+        "neighborhood": "Jardins",
+        "city": "São Paulo",
+        "state": "SP",
+        "postal_code": "04567890"
+      },
+      "ownership": {
+        "ownership_type": "direct",
+        "ownership_bps": 5000
+      }
+    }
+  ],
+  "metadata": {
+    "external_id": "your_internal_id"
+  },
+  "config": {
+    "auto_send_owner_sms": true,
+    "auto_send_owner_email": true
+  }
+}
+```
 
-<ParamField body="trade_name" type="string">
-  Doing business as / brand name (nome fantasia)
-</ParamField>
+### Business fields
 
-<ParamField body="email" type="string" required>
-  Company email address
-</ParamField>
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `cnpj` | string | Yes | Business CNPJ (14 digits) |
+| `legal_name` | string | Yes | Legal company name |
+| `trade_name` | string | No | Trade/brand name |
+| `email` | string | Yes | Company email |
+| `phone` | string | Yes | Company phone (E.164 format) |
+| `address` | object | Yes | Company address |
+| `owners` | array | Yes | List of business owners |
+| `metadata` | object | No | Custom metadata (JSON) |
+| `config` | object | No | Configuration options |
 
-<ParamField body="phone" type="string" required>
-  Phone number in E.164 format (e.g., `+5511999999999`)
-</ParamField>
+### Address fields
 
-<ParamField body="address" type="object" required>
-  Company registered address
-  <Expandable title="address">
-    <ParamField body="street" type="string" required>
-      Street name
-    </ParamField>
-    <ParamField body="number" type="string" required>
-      Street number
-    </ParamField>
-    <ParamField body="complement" type="string">
-      Suite, floor, unit, etc.
-    </ParamField>
-    <ParamField body="neighborhood" type="string" required>
-      Neighborhood (bairro)
-    </ParamField>
-    <ParamField body="city" type="string" required>
-      City name
-    </ParamField>
-    <ParamField body="state" type="string" required>
-      Two-letter state code (e.g., `SP`, `RJ`)
-    </ParamField>
-    <ParamField body="postal_code" type="string" required>
-      CEP (8 digits, numbers only)
-    </ParamField>
-  </Expandable>
-</ParamField>
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `street` | string | Yes | Street name |
+| `number` | string | Yes | Street number |
+| `complement` | string | No | Address complement |
+| `neighborhood` | string | Yes | Neighborhood |
+| `city` | string | Yes | City |
+| `state` | string | Yes | State (2-letter code) |
+| `postal_code` | string | Yes | Postal code (CEP) |
 
-<ParamField body="owners" type="array" required>
-  Company owners and representatives. Include all partners with 25% or more ownership.
-  <Expandable title="owner object">
-    <ParamField body="owner_type" type="string" required>
-      Owner type: `partner`, `representative`, `other_partner`
-    </ParamField>
-    <ParamField body="name" type="string" required>
-      Full legal name
-    </ParamField>
-    <ParamField body="social_name" type="string">
-      Social/preferred name
-    </ParamField>
-    <ParamField body="document" type="string" required>
-      CPF number (11 digits)
-    </ParamField>
-    <ParamField body="email" type="string" required>
-      Owner email address
-    </ParamField>
-    <ParamField body="phone" type="string" required>
-      Phone in E.164 format
-    </ParamField>
-    <ParamField body="birth_date" type="string" required>
-      Date of birth in `YYYY-MM-DD` format
-    </ParamField>
-    <ParamField body="nationality_country_code" type="string" required>
-      ISO 3166-1 alpha-2 country code (e.g., `BR`)
-    </ParamField>
-    <ParamField body="tax_residence_country_code" type="string" required>
-      ISO 3166-1 alpha-2 country code for tax residence
-    </ParamField>
-    <ParamField body="address" type="object" required>
-      Owner's residential address
-      <Expandable title="address">
-        <ParamField body="street" type="string" required>
-          Street name
-        </ParamField>
-        <ParamField body="number" type="string" required>
-          Street number
-        </ParamField>
-        <ParamField body="complement" type="string">
-          Apartment, suite, etc.
-        </ParamField>
-        <ParamField body="neighborhood" type="string" required>
-          Neighborhood (bairro)
-        </ParamField>
-        <ParamField body="city" type="string" required>
-          City name
-        </ParamField>
-        <ParamField body="state" type="string" required>
-          Two-letter state code
-        </ParamField>
-        <ParamField body="postal_code" type="string" required>
-          CEP (8 digits)
-        </ParamField>
-      </Expandable>
-    </ParamField>
-    <ParamField body="ownership" type="object" required>
-      Ownership details
-      <Expandable title="ownership">
-        <ParamField body="ownership_type" type="string" required>
-          Ownership type: `direct` or `indirect`
-        </ParamField>
-        <ParamField body="ownership_bps" type="integer" required>
-          Ownership percentage in basis points (0-10000). Example: 2500 = 25%
-        </ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-</ParamField>
+### Owner fields
 
-<ParamField body="metadata" type="object">
-  Custom key-value pairs for your tracking purposes
-</ParamField>
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `owner_type` | string | Yes | `partner`, `representative`, or `other_partner` |
+| `name` | string | Yes | Full legal name |
+| `social_name` | string | No | Social/preferred name |
+| `document` | string | Yes | CPF (11 digits) |
+| `email` | string | Yes | Email address |
+| `phone` | string | Yes | Phone (E.164 format) |
+| `birth_date` | string | Yes | Birth date (YYYY-MM-DD) |
+| `nationality_country_code` | string | Yes | Nationality (ISO 3166-1 alpha-2) |
+| `tax_residence_country_code` | string | Yes | Tax residence country |
+| `address` | object | Yes | Owner's address |
+| `ownership` | object | Yes | Ownership details |
 
-<ParamField body="config" type="object">
-  Configuration options
-  <Expandable title="config">
-    <ParamField body="auto_send_owner_sms" type="boolean" default="false">
-      Automatically send SMS verification to owners
-    </ParamField>
-    <ParamField body="auto_send_owner_email" type="boolean" default="false">
-      Automatically send email verification to owners
-    </ParamField>
-  </Expandable>
-</ParamField>
+### Ownership fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ownership_type` | string | Yes | `direct` or `indirect` |
+| `ownership_bps` | integer | Yes | Ownership percentage in basis points (5000 = 50%) |
 
 ## Response
 
-<ResponseField name="id" type="string">
-  Unique customer identifier (prefixed with `cus_`)
-</ResponseField>
+### Success (201 Created)
 
-<RequestExample>
-```bash cURL
+```json
+{
+  "id": "cus_abc123xyz"
+}
+```
+
+### Validation errors (400 Bad Request)
+
+```json
+{
+  "error": "invalid_cnpj",
+  "message": "The provided CNPJ is invalid"
+}
+```
+
+```json
+{
+  "error": "invalid_phone",
+  "message": "The provided phone number is invalid"
+}
+```
+
+```json
+{
+  "error": "invalid_owner",
+  "message": "Invalid CPF for owner"
+}
+```
+
+## Example
+
+```bash
 curl -X POST https://api.bipa.tech/partner/v1/customers/business \
   -H "X-API-Key: your_partner_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "cnpj": "12345678000199",
-    "legal_name": "Empresa Exemplo LTDA",
-    "trade_name": "Exemplo",
-    "email": "contato@exemplo.com.br",
+    "legal_name": "Empresa LTDA",
+    "email": "contato@empresa.com",
     "phone": "+5511999999999",
     "address": {
-      "street": "Rua Exemplo",
-      "number": "100",
+      "street": "Rua Example",
+      "number": "123",
       "neighborhood": "Centro",
       "city": "São Paulo",
       "state": "SP",
-      "postal_code": "01000000"
+      "postal_code": "01234567"
     },
     "owners": [
       {
         "owner_type": "partner",
-        "name": "Maria Santos",
-        "document": "98765432100",
-        "email": "maria@exemplo.com.br",
+        "name": "João Silva",
+        "document": "12345678900",
+        "email": "joao@empresa.com",
         "phone": "+5511988888888",
-        "birth_date": "1985-05-20",
+        "birth_date": "1990-01-15",
         "nationality_country_code": "BR",
         "tax_residence_country_code": "BR",
         "address": {
-          "street": "Rua dos Sócios",
-          "number": "50",
+          "street": "Rua Residencial",
+          "number": "456",
           "neighborhood": "Jardins",
           "city": "São Paulo",
           "state": "SP",
-          "postal_code": "01400000"
+          "postal_code": "04567890"
         },
         "ownership": {
           "ownership_type": "direct",
-          "ownership_bps": 5000
+          "ownership_bps": 10000
         }
       }
-    ],
-    "metadata": {
-      "internal_id": "12345"
-    },
-    "config": {
-      "auto_send_owner_sms": false,
-      "auto_send_owner_email": false
-    }
+    ]
   }'
 ```
-
-```python Python
-import requests
-
-response = requests.post(
-    "https://api.bipa.tech/partner/v1/customers/business",
-    headers={
-        "X-API-Key": "your_partner_api_key",
-        "Content-Type": "application/json"
-    },
-    json={
-        "cnpj": "12345678000199",
-        "legal_name": "Empresa Exemplo LTDA",
-        "trade_name": "Exemplo",
-        "email": "contato@exemplo.com.br",
-        "phone": "+5511999999999",
-        "address": {
-            "street": "Rua Exemplo",
-            "number": "100",
-            "neighborhood": "Centro",
-            "city": "São Paulo",
-            "state": "SP",
-            "postal_code": "01000000"
-        },
-        "owners": [
-            {
-                "owner_type": "partner",
-                "name": "Maria Santos",
-                "document": "98765432100",
-                "email": "maria@exemplo.com.br",
-                "phone": "+5511988888888",
-                "birth_date": "1985-05-20",
-                "nationality_country_code": "BR",
-                "tax_residence_country_code": "BR",
-                "address": {
-                    "street": "Rua dos Sócios",
-                    "number": "50",
-                    "neighborhood": "Jardins",
-                    "city": "São Paulo",
-                    "state": "SP",
-                    "postal_code": "01400000"
-                },
-                "ownership": {
-                    "ownership_type": "direct",
-                    "ownership_bps": 5000
-                }
-            }
-        ]
-    }
-)
-
-customer = response.json()
-print(f"Customer created: {customer['id']}")
-```
-
-```javascript Node.js
-const response = await fetch(
-  "https://api.bipa.tech/partner/v1/customers/business",
-  {
-    method: "POST",
-    headers: {
-      "X-API-Key": "your_partner_api_key",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      cnpj: "12345678000199",
-      legal_name: "Empresa Exemplo LTDA",
-      trade_name: "Exemplo",
-      email: "contato@exemplo.com.br",
-      phone: "+5511999999999",
-      address: {
-        street: "Rua Exemplo",
-        number: "100",
-        neighborhood: "Centro",
-        city: "São Paulo",
-        state: "SP",
-        postal_code: "01000000"
-      },
-      owners: [
-        {
-          owner_type: "partner",
-          name: "Maria Santos",
-          document: "98765432100",
-          email: "maria@exemplo.com.br",
-          phone: "+5511988888888",
-          birth_date: "1985-05-20",
-          nationality_country_code: "BR",
-          tax_residence_country_code: "BR",
-          address: {
-            street: "Rua dos Sócios",
-            number: "50",
-            neighborhood: "Jardins",
-            city: "São Paulo",
-            state: "SP",
-            postal_code: "01400000"
-          },
-          ownership: {
-            ownership_type: "direct",
-            ownership_bps: 5000
-          }
-        }
-      ]
-    })
-  }
-);
-
-const customer = await response.json();
-console.log(`Customer created: ${customer.id}`);
-```
-
-```go Go
-import (
-    "bytes"
-    "encoding/json"
-    "net/http"
-)
-
-payload := map[string]interface{}{
-    "cnpj":       "12345678000199",
-    "legal_name": "Empresa Exemplo LTDA",
-    "trade_name": "Exemplo",
-    "email":      "contato@exemplo.com.br",
-    "phone":      "+5511999999999",
-    "address": map[string]string{
-        "street":       "Rua Exemplo",
-        "number":       "100",
-        "neighborhood": "Centro",
-        "city":         "São Paulo",
-        "state":        "SP",
-        "postal_code":  "01000000",
-    },
-    "owners": []map[string]interface{}{
-        {
-            "owner_type":                "partner",
-            "name":                      "Maria Santos",
-            "document":                  "98765432100",
-            "email":                     "maria@exemplo.com.br",
-            "phone":                     "+5511988888888",
-            "birth_date":                "1985-05-20",
-            "nationality_country_code":  "BR",
-            "tax_residence_country_code": "BR",
-            "address": map[string]string{
-                "street":       "Rua dos Sócios",
-                "number":       "50",
-                "neighborhood": "Jardins",
-                "city":         "São Paulo",
-                "state":        "SP",
-                "postal_code":  "01400000",
-            },
-            "ownership": map[string]interface{}{
-                "ownership_type": "direct",
-                "ownership_bps":  5000,
-            },
-        },
-    },
-}
-body, _ := json.Marshal(payload)
-
-req, _ := http.NewRequest("POST", "https://api.bipa.tech/partner/v1/customers/business", bytes.NewBuffer(body))
-req.Header.Set("X-API-Key", "your_partner_api_key")
-req.Header.Set("Content-Type", "application/json")
-
-client := &http.Client{}
-resp, _ := client.Do(req)
-```
-</RequestExample>
-
-<ResponseExample>
-```json 201 Created
-{
-  "id": "cus_a1b2c3d4e5f6"
-}
-```
-
-```json 400 Invalid CNPJ
-{
-  "error": "invalid_cnpj",
-  "message": "The CNPJ number provided is invalid"
-}
-```
-
-```json 400 Invalid Phone
-{
-  "error": "invalid_phone",
-  "message": "Phone number must be in E.164 format"
-}
-```
-
-```json 400 Invalid Owner
-{
-  "error": "invalid_owner",
-  "message": "Owner CPF is invalid"
-}
-```
-
-```json 500 Internal Error
-{
-  "error": "internal_error",
-  "message": "An unexpected error occurred"
-}
-```
-</ResponseExample>
-
-## Ownership calculation
-
-Ownership is specified in **basis points** (bps), where 10000 bps = 100%:
-
-| Percentage | Basis Points |
-|------------|--------------|
-| 10% | 1000 |
-| 25% | 2500 |
-| 50% | 5000 |
-| 100% | 10000 |
-
-<Warning>
-  Include all partners with 25% or more ownership. Failure to disclose significant ownership may result in compliance issues.
-</Warning>
-
-## Phone format
-
-Phone numbers must be in E.164 format:
-
-```
-+[country code][area code][number]
-```
-
-Examples:
-- `+5511999999999` (São Paulo mobile)
-- `+5521988888888` (Rio de Janeiro mobile)
-- `+551133334444` (São Paulo landline)
-
-<Note>
-  Business customers undergo compliance verification after creation. Monitor the Events API for `user` events to track when the account becomes active.
-</Note>

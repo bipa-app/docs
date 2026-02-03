@@ -1,135 +1,77 @@
 ---
 title: "Mark Event Delivered"
-description: "Mark an infrastructure event as delivered after processing."
-api: "PATCH https://api.bipa.tech/partner/v1/events/{id}"
+description: "Mark an event as delivered after processing."
 ---
+
+## Endpoint
+
+```
+PATCH /partner/v1/events/{id}
+```
 
 ## Request
 
-Mark an event as delivered to indicate that your system has successfully processed it. This prevents the event from appearing in undelivered event queries.
-
 ### Path parameters
 
-<ParamField path="id" type="string" required>
-  The unique event identifier (UUID)
-</ParamField>
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | string (UUID) | Yes | Event ID to mark as delivered |
+
+### Headers
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `X-API-Key` | string | Yes | Your partner API key |
 
 ## Response
 
-Returns an empty object on success.
+### Success (200 OK)
 
-<RequestExample>
-```bash cURL
-curl -X PATCH https://api.bipa.tech/partner/v1/events/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key: your_partner_api_key"
-```
-
-```python Python
-import requests
-
-event_id = "550e8400-e29b-41d4-a716-446655440000"
-
-response = requests.patch(
-    f"https://api.bipa.tech/partner/v1/events/{event_id}",
-    headers={"X-API-Key": "your_partner_api_key"}
-)
-
-if response.status_code == 200:
-    print(f"Event {event_id} marked as delivered")
-```
-
-```javascript Node.js
-const eventId = "550e8400-e29b-41d4-a716-446655440000";
-
-const response = await fetch(
-  `https://api.bipa.tech/partner/v1/events/${eventId}`,
-  {
-    method: "PATCH",
-    headers: {
-      "X-API-Key": "your_partner_api_key"
-    }
-  }
-);
-
-if (response.ok) {
-  console.log(`Event ${eventId} marked as delivered`);
-}
-```
-
-```go Go
-eventID := "550e8400-e29b-41d4-a716-446655440000"
-url := fmt.Sprintf("https://api.bipa.tech/partner/v1/events/%s", eventID)
-
-req, _ := http.NewRequest("PATCH", url, nil)
-req.Header.Set("X-API-Key", "your_partner_api_key")
-
-client := &http.Client{}
-resp, _ := client.Do(req)
-```
-</RequestExample>
-
-<ResponseExample>
-```json 200 OK
+```json
 {}
 ```
 
-```json 404 Not Found
-{
-  "error": "not_found",
-  "message": "Event not found"
-}
+### Not found (404 Not Found)
+
+The event was not found or does not belong to your partner account.
+
+## Example
+
+```bash
+curl -X PATCH https://api.bipa.tech/partner/v1/events/550e8400-e29b-41d4-a716-446655440000 \
+  -H "X-API-Key: your_partner_api_key"
 ```
-</ResponseExample>
 
 ## Usage pattern
 
 A typical event processing flow:
 
-```python
-import requests
+1. Poll for pending events using `GET /partner/v1/events?delivered=false`
+2. Process each event in your system
+3. Mark each event as delivered using this endpoint
+4. Repeat periodically
 
-API_KEY = "your_partner_api_key"
-BASE_URL = "https://api.bipa.tech/partner/v1"
+```javascript
+async function processEvents() {
+  // 1. Fetch pending events
+  const response = await fetch(
+    "https://api.bipa.tech/partner/v1/events?delivered=false",
+    { headers: { "X-API-Key": process.env.BIPA_PARTNER_API_KEY } }
+  );
+  const { events } = await response.json();
 
-def process_events():
-    # 1. Fetch undelivered events
-    response = requests.get(
-        f"{BASE_URL}/events",
-        headers={"X-API-Key": API_KEY},
-        params={"delivered": "false"}
-    )
-    events = response.json()["events"]
+  // 2. Process each event
+  for (const event of events) {
+    await handleEvent(event);
 
-    for event in events:
-        try:
-            # 2. Process the event based on its kind
-            handle_event(event)
-
-            # 3. Mark as delivered after successful processing
-            requests.patch(
-                f"{BASE_URL}/events/{event['id']}",
-                headers={"X-API-Key": API_KEY}
-            )
-            print(f"Processed and delivered: {event['id']}")
-        except Exception as e:
-            print(f"Failed to process event {event['id']}: {e}")
-            # Don't mark as delivered - will retry on next poll
-
-def handle_event(event):
-    if event["kind"] == "pix_key":
-        handle_pix_key_event(event["log"])
-    elif event["kind"] == "pix_inflow":
-        handle_pix_inflow_event(event["log"])
-    elif event["kind"] == "user":
-        handle_user_event(event["log"])
-    elif event["kind"] == "usdt_withdrawal":
-        handle_withdrawal_event(event["log"])
+    // 3. Mark as delivered
+    await fetch(
+      `https://api.bipa.tech/partner/v1/events/${event.id}`,
+      {
+        method: "PATCH",
+        headers: { "X-API-Key": process.env.BIPA_PARTNER_API_KEY }
+      }
+    );
+  }
+}
 ```
-
-<Warning>
-  Only mark an event as delivered after your system has successfully processed it. If processing fails, leave the event undelivered to retry on the next poll.
-</Warning>
-
-<Note>
-  Marking an event as delivered is idempotent - calling this endpoint multiple times for the same event has no adverse effects.
-</Note>

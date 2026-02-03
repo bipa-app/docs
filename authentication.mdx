@@ -1,11 +1,11 @@
 ---
 title: "Authentication"
-description: "Secure your API requests with X-API-Key authentication."
+description: "Secure your requests with X-API-Key authentication."
 ---
 
 ## API Keys
 
-All API requests require authentication using an API key. Include your API key in the `X-API-Key` header of every request.
+All requests require authentication using an API key. Include your API key in the `X-API-Key` header of every request.
 
 ```bash
 X-API-Key: bipa_prod_xxxxxxxxxxxx
@@ -24,50 +24,6 @@ Bipa provides two types of API keys:
   Never expose your API keys in client-side code, public repositories, or logs. Treat them like passwords.
 </Warning>
 
-## Making authenticated requests
-
-Include your API key in the `X-API-Key` header:
-
-<CodeGroup>
-
-```bash cURL
-curl https://api.bipa.tech/v1/customers \
-  -H "X-API-Key: bipa_prod_xxxxxxxxxxxx" \
-  -H "Content-Type: application/json"
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.bipa.tech/v1/customers",
-    headers={
-        "X-API-Key": "bipa_prod_xxxxxxxxxxxx",
-        "Content-Type": "application/json"
-    }
-)
-```
-
-```javascript Node.js
-const response = await fetch("https://api.bipa.tech/v1/customers", {
-  headers: {
-    "X-API-Key": "bipa_prod_xxxxxxxxxxxx",
-    "Content-Type": "application/json"
-  }
-});
-```
-
-```go Go
-req, _ := http.NewRequest("GET", "https://api.bipa.tech/v1/customers", nil)
-req.Header.Set("X-API-Key", "bipa_prod_xxxxxxxxxxxx")
-req.Header.Set("Content-Type", "application/json")
-
-client := &http.Client{}
-resp, _ := client.Do(req)
-```
-
-</CodeGroup>
-
 ## Obtaining API keys
 
 1. Log in to your [Bipa Console](https://console.bipa.tech)
@@ -81,12 +37,7 @@ resp, _ := client.Do(req)
 
 ## Sandbox environment
 
-The sandbox environment uses the same base URL but with test API keys:
-
-```bash
-curl https://api.bipa.tech/v1/customers \
-  -H "X-API-Key: bipa_test_xxxxxxxxxxxx"
-```
+The sandbox environment uses the same infrastructure but with test API keys (`bipa_test_` prefix).
 
 In sandbox mode:
 - No real money is moved
@@ -94,62 +45,20 @@ In sandbox mode:
 - Trades execute with test balances
 - Events are generated normally
 
-## Authentication errors
-
-If authentication fails, you'll receive a `401 Unauthorized` response:
-
-```json
-{
-  "error": {
-    "type": "authentication_error",
-    "code": "invalid_api_key",
-    "message": "The API key provided is invalid or has been revoked.",
-    "doc_url": "https://docs.bipa.tech/errors#invalid_api_key"
-  }
-}
-```
-
-Common authentication issues:
-
-| Error Code | Cause | Solution |
-|------------|-------|----------|
-| `invalid_api_key` | Key doesn't exist or is malformed | Check the key format and copy it again |
-| `revoked_api_key` | Key has been revoked | Generate a new key in the console |
-| `missing_api_key` | No `X-API-Key` header | Include the header in your request |
-
 ## Security best practices
 
-<AccordionGroup>
-  <Accordion title="Use environment variables">
-    Store API keys in environment variables, not in code:
-    ```bash
-    export BIPA_API_KEY=bipa_prod_xxxxxxxxxxxx
-    ```
-    ```python
-    import os
-    api_key = os.environ.get("BIPA_API_KEY")
-    ```
-  </Accordion>
-  <Accordion title="Rotate keys regularly">
-    Create new keys periodically and revoke old ones. This limits the impact if a key is compromised.
-  </Accordion>
-  <Accordion title="Revoke compromised keys immediately">
-    If you suspect a key has been compromised, create a new one immediately. This will automatically revoke the old key.
-  </Accordion>
-  <Accordion title="Monitor API usage">
-    Review your API logs in the console regularly to detect unusual activity.
-  </Accordion>
-</AccordionGroup>
+### Use environment variables
 
-## IP allowlisting
+Store API keys in environment variables, not in code:
 
-For additional security, you can restrict API key usage to specific IP addresses:
+```bash
+export BIPA_API_KEY=bipa_prod_xxxxxxxxxxxx
+```
 
-1. Go to **Developers** → **API Keys** in the console
-2. Select the key you want to restrict
-3. Add allowed IP addresses or CIDR ranges
+```javascript
+const apiKey = process.env.BIPA_API_KEY;
+```
 
-<Note>
-  IP allowlisting is optional but recommended for production environments.
-</Note>
+### Revoke compromised keys immediately
 
+If you suspect a key has been compromised, create a new one immediately. This will automatically revoke the old key.
