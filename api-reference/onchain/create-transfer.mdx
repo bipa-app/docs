@@ -126,7 +126,7 @@ Create an outbound transfer to send cryptocurrency from a customer's balance to 
 <RequestExample>
 ```bash cURL - USDT Transfer (100 USDT)
 curl -X POST https://api.bipa.tech/v1/onchain/transfers \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -140,7 +140,7 @@ curl -X POST https://api.bipa.tech/v1/onchain/transfers \
 
 ```bash cURL - Bitcoin Transfer (0.01 BTC)
 curl -X POST https://api.bipa.tech/v1/onchain/transfers \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -167,7 +167,7 @@ amount = to_smallest_unit(Decimal("100"), 6)  # "100000000"
 response = requests.post(
     "https://api.bipa.tech/v1/onchain/transfers",
     headers={
-        "Authorization": "Bearer bipa_live_sk_...",
+        "X-API-Key": "bipa_prod_...",
         "Content-Type": "application/json"
     },
     json={
@@ -206,7 +206,7 @@ const response = await fetch(
   {
     method: "POST",
     headers: {
-      "Authorization": "Bearer bipa_live_sk_...",
+      "X-API-Key": "bipa_prod_...",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({

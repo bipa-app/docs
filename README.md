@@ -55,11 +55,11 @@ https://api.bipa.tech/v1
 
 ## Authentication
 
-All API requests require Bearer token authentication:
+All API requests require X-API-Key authentication:
 
 ```bash
 curl https://api.bipa.tech/v1/customers \
-  -H "Authorization: Bearer bipa_live_sk_xxxxxxxxxxxx"
+  -H "X-API-Key: bipa_prod_xxxxxxxxxxxx"
 ```
 
 ## Resources

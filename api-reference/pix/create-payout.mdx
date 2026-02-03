@@ -139,7 +139,7 @@ If you want to send a payout to a counterparty with a different document, talk t
 <RequestExample>
 ```bash cURL
 curl -X POST https://api.bipa.tech/v1/pix/payouts \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -164,7 +164,7 @@ def to_centavos(amount: Decimal) -> str:
 response = requests.post(
     "https://api.bipa.tech/v1/pix/payouts",
     headers={
-        "Authorization": "Bearer bipa_live_sk_...",
+        "X-API-Key": "bipa_prod_...",
         "Content-Type": "application/json"
     },
     json={
@@ -194,7 +194,7 @@ function toCentavos(amount) {
 const response = await fetch("https://api.bipa.tech/v1/pix/payouts", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer bipa_live_sk_...",
+    "X-API-Key": "bipa_prod_...",
     "Content-Type": "application/json"
   },
   body: JSON.stringify({

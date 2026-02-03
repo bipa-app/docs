@@ -45,7 +45,7 @@ Retrieve the current balances for a customer across all supported assets.
 <RequestExample>
 ```bash cURL
 curl https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 ```
 
 ```python Python
@@ -57,7 +57,7 @@ def to_human(amount: str, decimals: int) -> Decimal:
 
 response = requests.get(
     "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances",
-    headers={"Authorization": "Bearer bipa_live_sk_..."}
+    headers={"X-API-Key": "bipa_prod_..."}
 )
 
 data = response.json()
@@ -80,7 +80,7 @@ function toHuman(amount, decimals) {
 const response = await fetch(
   "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/balances",
   {
-    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+    headers: { "X-API-Key": "bipa_prod_..." }
   }
 );
 
@@ -179,7 +179,7 @@ def has_sufficient_balance(customer_id: str, asset: str, amount: Decimal) -> boo
 
     response = requests.get(
         f"https://api.bipa.tech/v1/customers/{customer_id}/balances",
-        headers={"Authorization": "Bearer bipa_live_sk_..."}
+        headers={"X-API-Key": "bipa_prod_..."}
     )
 
     balances = response.json()["balances"]

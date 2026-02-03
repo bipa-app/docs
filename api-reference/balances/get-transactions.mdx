@@ -76,19 +76,19 @@ Each transaction includes a `type` field that determines the structure of the ob
 ```bash cURL
 # List all transactions
 curl "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions?limit=20" \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 
 # Get only trades (executed quotes)
 curl "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions?type=quote" \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 
 # Get Pix activity
 curl "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions?type=pix_inbound" \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 
 # Get on-chain transfers
 curl "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions?type=onchain_outbound" \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 ```
 
 ```python Python
@@ -101,7 +101,7 @@ def to_human(amount: str, decimals: int) -> Decimal:
 # Get transaction history
 response = requests.get(
     "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions",
-    headers={"Authorization": "Bearer bipa_live_sk_..."},
+    headers={"X-API-Key": "bipa_prod_..."},
     params={"limit": 50}
 )
 
@@ -135,7 +135,7 @@ function toHuman(amount, decimals) {
 const response = await fetch(
   "https://api.bipa.tech/v1/customers/cus_a1b2c3d4e5f6/transactions?limit=20",
   {
-    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+    headers: { "X-API-Key": "bipa_prod_..." }
   }
 );
 
@@ -382,7 +382,7 @@ def build_ledger(customer_id: str):
 
         response = requests.get(
             f"https://api.bipa.tech/v1/customers/{customer_id}/transactions",
-            headers={"Authorization": "Bearer bipa_live_sk_..."},
+            headers={"X-API-Key": "bipa_prod_..."},
             params=params
         ).json()
 
@@ -510,7 +510,7 @@ Use the transaction `id` and `type` to fetch fresh details from the appropriate 
 ```python
 def get_transaction_details(txn_type: str, txn_id: str) -> dict:
     """Fetch full details for a transaction by type and ID."""
-    headers = {"Authorization": "Bearer bipa_live_sk_..."}
+    headers = {"X-API-Key": "bipa_prod_..."}
     base_url = "https://api.bipa.tech/v1"
 
     if txn_type == "quote":
@@ -548,7 +548,7 @@ def export_transactions_csv(customer_id: str) -> str:
 
         response = requests.get(
             f"https://api.bipa.tech/v1/customers/{customer_id}/transactions",
-            headers={"Authorization": "Bearer bipa_live_sk_..."},
+            headers={"X-API-Key": "bipa_prod_..."},
             params=params
         ).json()
 

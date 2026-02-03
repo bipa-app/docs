@@ -109,7 +109,7 @@ Returns the full Pix transaction object.
 <RequestExample>
 ```bash cURL
 curl https://api.bipa.tech/v1/pix/pix_abc123 \
-  -H "Authorization: Bearer bipa_live_sk_..."
+  -H "X-API-Key: bipa_prod_..."
 ```
 
 ```python Python
@@ -117,7 +117,7 @@ import requests
 
 response = requests.get(
     "https://api.bipa.tech/v1/pix/pix_abc123",
-    headers={"Authorization": "Bearer bipa_live_sk_..."}
+    headers={"X-API-Key": "bipa_prod_..."}
 )
 
 transaction = response.json()
@@ -129,7 +129,7 @@ print(f"Status: {transaction['status']}, Amount: R$ {amount_brl:.2f}")
 const response = await fetch(
   "https://api.bipa.tech/v1/pix/pix_abc123",
   {
-    headers: { "Authorization": "Bearer bipa_live_sk_..." }
+    headers: { "X-API-Key": "bipa_prod_..." }
   }
 );
 

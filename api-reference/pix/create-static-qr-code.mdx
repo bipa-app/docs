@@ -62,7 +62,7 @@ If you want to send a payment from a sender with a different document, talk to y
 <RequestExample>
 ```bash cURL - Fixed Amount (R$ 500.00)
 curl -X POST https://api.bipa.tech/v1/pix/qr-code/static \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -73,7 +73,7 @@ curl -X POST https://api.bipa.tech/v1/pix/qr-code/static \
 
 ```bash cURL - Open Amount
 curl -X POST https://api.bipa.tech/v1/pix/qr-code/static \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -84,7 +84,7 @@ curl -X POST https://api.bipa.tech/v1/pix/qr-code/static \
 
 ```bash cURL - Without Reconciliation ID
 curl -X POST https://api.bipa.tech/v1/pix/qr-code/static \
-  -H "Authorization: Bearer bipa_live_sk_..." \
+  -H "X-API-Key: bipa_prod_..." \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cus_a1b2c3d4e5f6",
@@ -103,7 +103,7 @@ def to_centavos(amount: Decimal) -> str:
 response = requests.post(
     "https://api.bipa.tech/v1/pix/qr-code/static",
     headers={
-        "Authorization": "Bearer bipa_live_sk_...",
+        "X-API-Key": "bipa_prod_...",
         "Content-Type": "application/json"
     },
     json={
@@ -132,7 +132,7 @@ function toCentavos(amount) {
 const response = await fetch("https://api.bipa.tech/v1/pix/qr-code/static", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer bipa_live_sk_...",
+    "X-API-Key": "bipa_prod_...",
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
