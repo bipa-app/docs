@@ -23,6 +23,12 @@
               "errors",
               "rate-limits"
             ]
+          },
+          {
+            "group": "Sandbox",
+            "icon": "flask-vial",
+            "iconColor": "#F59E0B",
+            "pages": ["sandbox"]
           }
         ]
       },
