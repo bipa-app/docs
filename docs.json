@@ -83,21 +83,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "API Status",
-          "href": "https://status.bipa.tech",
-          "icon": "signal"
-        },
-        {
-          "anchor": "Contact Sales",
-          "href": "https://bipa.tech",
-          "icon": "envelope"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
