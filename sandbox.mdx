@@ -1,0 +1,71 @@
+---
+title: "Sandbox"
+description: "Create test users and credit them with funds using the Bipa Console in sandbox mode."
+---
+
+## Overview
+
+The sandbox environment lets you build and test your integration without moving real money or requiring real KYC. In sandbox mode you get:
+
+- **Test users** — create users instantly, no KYC required
+- **Fake BRL funds** — credit any amount to test balances
+- **Bacen staging Pix** — Pix payments execute against the central bank staging environment
+- **Testnet crypto** — crypto transactions run on testnets
+
+To get your sandbox API keys, see [Authentication](/authentication).
+
+## Creating test users
+
+<Steps>
+  <Step title="Log in to Console">
+    Go to [infra.bipa.app](https://infra.bipa.app) and sign in with your account.
+  </Step>
+  <Step title="Open Partner Users">
+    In the sidebar, click **Partner Users**.
+  </Step>
+  <Step title="Create a user">
+    Click **Create User** and fill in the required fields:
+
+    | Field | Format | Example |
+    |-------|--------|---------|
+    | CPF | 11 digits | `12345678900` |
+    | Full Name | Text | `Maria Silva` |
+    | Birth Date | `YYYY-MM-DD` | `1990-01-15` |
+    | Mother's Name | Text | `Ana Silva` |
+  </Step>
+  <Step title="Get the user ID">
+    Submit the form. The user is created instantly with no KYC verification, and a `user_id` is returned.
+  </Step>
+</Steps>
+
+<Warning>
+  The **Partner Users** menu is only visible when you are in sandbox mode. If you don't see it, make sure you are using a test API key (`bipa_test_`).
+</Warning>
+
+## Crediting test users
+
+<Steps>
+  <Step title="Find the user">
+    From the **Partner Users** page, locate the user you want to credit.
+  </Step>
+  <Step title="Add funds">
+    Click **Add Funds** and enter the amount in BRL.
+
+    - Minimum: greater than R\$0
+    - Maximum: R\$1,000,000.00
+  </Step>
+  <Step title="Confirm">
+    Funds are added instantly to the user's sandbox BRL balance.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Set up your sandbox and production API keys.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/partner/introduction">
+    Explore the full API to start building your integration.
+  </Card>
+</CardGroup>
