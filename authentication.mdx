@@ -70,7 +70,7 @@ resp, _ := client.Do(req)
 
 ## Obtaining API keys
 
-1. Log in to your [Bipa Console](https://console.bipa.tech)
+1. Log in to your [Bipa Infra](https://infra.bipa.app)
 2. Navigate to **Developers** → **API Keys**
 3. Click **Create new key**
 4. Copy your key immediately — it won't be shown again
@@ -114,7 +114,7 @@ Common authentication issues:
 | Error Code | Cause | Solution |
 |------------|-------|----------|
 | `invalid_api_key` | Key doesn't exist or is malformed | Check the key format and copy it again |
-| `revoked_api_key` | Key has been revoked | Generate a new key in the console |
+| `revoked_api_key` | Key has been revoked | Generate a new key in the Bipa Infra dashboard |
 | `missing_api_key` | No `X-API-Key` header | Include the header in your request |
 */}
 
@@ -138,7 +138,7 @@ Common authentication issues:
     If you suspect a key has been compromised, create a new one immediately. This will automatically revoke the old key.
   </Accordion>
   <Accordion title="Monitor API usage">
-    Review your API logs in the console regularly to detect unusual activity.
+    Review your API logs in the Bipa Infra dashboard regularly to detect unusual activity.
   </Accordion>
 </AccordionGroup>
 

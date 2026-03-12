@@ -23,6 +23,12 @@
               "errors",
               "rate-limits"
             ]
+          },
+          {
+            "group": "Bipa Infra",
+            "icon": "desktop",
+            "iconColor": "#8B5CF6",
+            "pages": ["sandbox-users"]
           }
         ]
       },
@@ -98,8 +104,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Console",
-      "href": "https://console.bipa.tech"
+      "label": "Bipa Infra",
+      "href": "https://infra.bipa.app"
     }
   },
   "footer": {
