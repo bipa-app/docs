@@ -1,0 +1,46 @@
+---
+title: "Sandbox Users"
+description: "Create and credit partner users directly from Bipa Infra for sandbox testing."
+---
+
+<Warning>
+  This feature is only available in the **sandbox environment**. It is designed to help you test your integration without calling the API directly.
+</Warning>
+
+## Overview
+
+[Bipa Infra](https://infra.bipa.app) allows you to create partner users and credit their accounts directly from the UI — no API calls required. Use this to quickly set up test scenarios for Pix inflows, trades, and other flows.
+
+## Create user
+
+Navigate to the sandbox user management section in Bipa Infra to create a new user. You can create users with two document types:
+
+### CPF (personal)
+
+For individual users, provide:
+
+| Field | Description |
+|-------|-------------|
+| CPF | 11-digit Brazilian personal document number |
+| Full name | User's full legal name |
+| Birth date | Format: `YYYY-MM-DD` |
+| Mother's name | User's mother's full name |
+
+### CNPJ (business)
+
+For business users, provide:
+
+| Field | Description |
+|-------|-------------|
+| CNPJ | 14-digit Brazilian business document number |
+
+On success, a `user_id` is returned. Save this — you'll need it to credit the user or reference them in API calls.
+
+## Credit user
+
+Once a user is created, you can credit their sandbox balance directly from Bipa Infra:
+
+1. Enter the `user_id` returned from user creation
+2. Specify an amount in BRL (up to R$ 1,000,000.00)
+
+The credited balance can then be used to test Pix inflows, trades, and other transaction flows in the sandbox environment.
