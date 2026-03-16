@@ -1464,6 +1464,13 @@
                 "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
                 "type": "string"
             }
+        },
+        "securitySchemes": {
+            "apiKey": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key"
+            }
         }
     },
     "info": {
@@ -1476,7 +1483,7 @@
     },
     "openapi": "3.1.0",
     "paths": {
-        "/partner/v1/customers/business": {
+        "/v1/customers/business": {
             "post": {
                 "operationId": "create_business_customer",
                 "requestBody": {
@@ -1509,7 +1516,7 @@
                 ]
             }
         },
-        "/partner/v1/events": {
+        "/v1/events": {
             "get": {
                 "operationId": "list_events",
                 "parameters": [
@@ -1543,7 +1550,7 @@
                 ]
             }
         },
-        "/partner/v1/events/{id}": {
+        "/v1/events/{id}": {
             "patch": {
                 "operationId": "set_event_delivered",
                 "parameters": [
@@ -1573,7 +1580,7 @@
                 ]
             }
         },
-        "/partner/v1/pix-in": {
+        "/v1/pix-in": {
             "get": {
                 "operationId": "list_pix_inflows",
                 "responses": {
@@ -1596,7 +1603,7 @@
                 ]
             }
         },
-        "/partner/v1/pix-key": {
+        "/v1/pix-key": {
             "post": {
                 "operationId": "create_pix_key",
                 "requestBody": {
@@ -1656,7 +1663,7 @@
                 ]
             }
         },
-        "/partner/v1/pix-key/{user_id}": {
+        "/v1/pix-key/{user_id}": {
             "delete": {
                 "operationId": "delete_pix_key",
                 "parameters": [
@@ -1762,7 +1769,7 @@
                 ]
             }
         },
-        "/partner/v1/pix-out": {
+        "/v1/pix-out": {
             "post": {
                 "operationId": "create_outbound_pix",
                 "requestBody": {
@@ -1832,7 +1839,7 @@
                 ]
             }
         },
-        "/partner/v1/trades/quote": {
+        "/v1/trades/quote": {
             "post": {
                 "operationId": "create_trade_quote",
                 "requestBody": {
@@ -1912,7 +1919,7 @@
                 ]
             }
         },
-        "/partner/v1/trades/{id}": {
+        "/v1/trades/{id}": {
             "patch": {
                 "operationId": "accept_trade_quote",
                 "parameters": [
@@ -1986,7 +1993,7 @@
                 ]
             }
         },
-        "/partner/v1/withdrawals/usdt": {
+        "/v1/withdrawals/usdt": {
             "post": {
                 "operationId": "create_usdt_withdrawal",
                 "requestBody": {
@@ -2099,5 +2106,20 @@
                 ]
             }
         }
-    }
+    },
+    "security": [
+        {
+            "apiKey": []
+        }
+    ],
+    "servers": [
+        {
+            "url": "https://api-sandbox.bipa.app",
+            "description": "Sandbox"
+        },
+        {
+            "url": "https://api.bipa.app",
+            "description": "Production"
+        }
+    ]
 }
