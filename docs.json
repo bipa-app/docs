@@ -21,14 +21,20 @@
               "introduction",
               "authentication",
               "errors",
-              "rate-limits"
+              "events"
             ]
           },
           {
             "group": "Bipa Infra",
             "icon": "desktop",
             "iconColor": "#8B5CF6",
-            "pages": ["sandbox-users", "pix-keys", "pix-inflows", "pix-outflows", "trades", "users", "usdt-withdrawals"]
+            "pages": ["sandbox-users"]
+          },
+          {
+            "group": "Events",
+            "icon": "bell",
+            "iconColor": "#F59E0B",
+            "pages": ["pix-keys", "pix-inflows", "pix-outflows", "trades", "users", "usdt-withdrawals"]
           }
         ]
       },
