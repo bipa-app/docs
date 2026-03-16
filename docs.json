@@ -21,7 +21,8 @@
               "introduction",
               "authentication",
               "errors",
-              "events"
+              "events",
+              "llm-skill"
             ]
           },
           {
