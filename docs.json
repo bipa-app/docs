@@ -124,7 +124,11 @@
   },
   "openapi": "api-reference/openapi.json",
   "api": {
-    "baseUrl": "https://api.bipa.tech"
+    "baseUrl": "https://api-sandbox.bipa.app",
+    "auth": {
+      "method": "key",
+      "name": "X-API-Key"
+    }
   },
   "appearance": {
     "default": "dark"
