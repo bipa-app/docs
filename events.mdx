@@ -1,0 +1,53 @@
+---
+title: "Events"
+description: "Track state changes across your integration with the Events API."
+---
+
+## Overview
+
+The Events API returns a global, chronological list of state-change events for your integration. Every meaningful state transition — a Pix key being registered, a trade being accepted, an inflow arriving — produces an event.
+
+Event kinds: `pix_key`, `pix_inflow`, `pix_outflow`, `user`, `usdt_withdrawal`, `trade`.
+
+## How it works
+
+- Each event has an `is_delivered` flag (starts `false`)
+- Your system polls for undelivered events, processes them, then marks each as delivered
+- Events you don't mark remain undelivered and appear again on the next poll
+- This gives **at-least-once delivery** with explicit acknowledgment
+
+## Integration pattern
+
+The integration follows a 3-step loop:
+
+1. **Fetch undelivered events** — [`GET /v1/events?delivered=false`](/api-reference/partner/events/list-events)
+2. **Process each event** — switch on `kind`, handle the `log` payload
+3. **Mark as delivered** — [`PATCH /v1/events/{event.id}`](/api-reference/partner/events/mark-delivered) only after successful processing
+
+### Pseudocode example
+
+```
+// Run on a schedule (e.g. every 30 seconds)
+function process_events():
+    response = GET /v1/events?delivered=false
+
+    for event in response.events:
+        switch event.kind:
+            case "pix_key":    handle_pix_key(event.log)
+            case "pix_inflow": handle_pix_inflow(event.log)
+            case "trade":      handle_trade(event.log)
+            case "user":       handle_user(event.log)
+            // ... other kinds
+
+        // Only mark delivered after successful processing
+        PATCH /v1/events/{event.id}
+```
+
+<Tip>
+**Best practices**
+
+- Run on a recurring schedule (e.g. every 30s via cron)
+- Only mark delivered **after** successful processing — failed events retry on next poll
+- Store event `id` locally to deduplicate (idempotency)
+- See the [Events](/pix-keys) section for detailed state machines and log schemas per kind
+</Tip>
