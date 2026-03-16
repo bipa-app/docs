@@ -28,7 +28,7 @@
             "group": "Bipa Infra",
             "icon": "desktop",
             "iconColor": "#8B5CF6",
-            "pages": ["sandbox-users"]
+            "pages": ["sandbox-users", "pix-keys"]
           }
         ]
       },
