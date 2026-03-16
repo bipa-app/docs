@@ -1,0 +1,140 @@
+---
+title: "LLM Skill"
+description: "Use AI-assisted tooling to accelerate your Bipa Infra integration."
+---
+
+## Overview
+
+Copy the skill below into your AI coding assistant to get context-aware help with the Bipa Infra API. It works with any tool that supports system prompts or skill files (Claude Code, Cursor, Windsurf, Copilot, etc.).
+
+The skill teaches your AI assistant about Bipa endpoints, state machines, event processing, and code generation conventions.
+
+## The skill
+
+Copy this into your AI coding assistant's configuration:
+
+<CodeGroup>
+```markdown Skill
+# Bipa Infra API
+
+You are helping a developer integrate with the Bipa Infra API.
+
+Full documentation: https://docs.bipa.tech
+
+## Authentication
+
+- All requests use the `X-API-Key` header
+- Read the key from an environment variable (`BIPA_API_KEY`), never hardcode it
+- Key prefixes: `bipa_prod_` (production), `bipa_test_` (sandbox)
+
+## Environments
+
+| Environment | Base URL |
+|-------------|----------|
+| Sandbox | `https://api-sandbox.bipa.app` |
+| Production | `https://api.bipa.app` |
+
+Default to sandbox in generated code. Make the base URL configurable.
+
+## Conventions
+
+- **Idempotency**: all mutating requests must include an `idempotency_key` (UUIDv7)
+- **User IDs**: UUIDv4
+- **Event/log IDs**: UUIDv7
+- **Timestamps**: `created_at` and `timestamp` fields are Unix timestamps (integers, not ISO strings)
+- **Endpoints**: always use `/v1/...` paths — there is no `/partner` prefix
+
+## API Reference
+
+For full endpoint details (request/response schemas, error codes, payment kinds), refer to the API documentation: https://docs.bipa.tech
+
+---
+
+## State Machines
+
+- **Pix Key**: `created → registered | failed`, `registered → canceled`
+- **Pix Inflow**: `created → credited | failed`
+- **Pix Outflow**: `created → accepted → success | failed`, `created → failed`
+- **Trade**: `quoted → accepted | expired`
+- **USDT Withdrawal**: `created → sent → settled`, `created | sent → failed`
+- **User**: `opened → closed`
+
+---
+
+## Event Log Schemas
+
+Event wrapper: `{ id (UUIDv7), kind, created_at (int64), is_delivered (bool), log }`
+Event kinds: `pix_key` | `pix_inflow` | `pix_outflow` | `trade` | `usdt_withdrawal` | `user`
+
+All logs share: `id`, `kind`, `created_at` (int64), `timestamp` (int64). Extra fields below (nullable unless noted):
+
+**PixKeyLog** — kind: `created | registered | failed | canceled`
+`user_id`, `key` (present only when registered)
+
+**PixInflowLog** — kind: `created | credited | failed`
+`end_to_end_id`, `receiver_user_id`, `amount_cents`, `method` (dict|manual|static_qr_code|payer_qr_code|dynamic_qr_code|initiator), `sender_bank_code`, `sender_branch_code`, `sender_account_number`, `sender_account_type` (checking|savings|payment|salary)
+
+**PixOutflowLog** — kind: `created | accepted | success | failed`
+`resource_id`, `end_to_end_id`, `sender_user_id`, `amount_cents`, `method`, `failure_reason`, `receiver_bank_code`, `receiver_branch_code`, `receiver_account_number`, `receiver_account_type` (checking|savings|payment|salary)
+
+**TradeLog** — kind: `quoted | accepted | expired`
+`user_id`, `asset` (usdt|btc), `side` (buy|sell), `quantity`, `price_cents`, `cents_gross`, `cents_net`, `cents_fee`
+
+**UsdtWithdrawalLog** — kind: `created | sent | settled | failed`
+`user_id`, `amount_usdtmicros`, `blockchain_address`, `network` (ETH|MATIC), `tx_hash` (present when sent/settled)
+
+**UserLog** — kind: `opened | closed`
+`user_id`, `account_branch_code`, `account_digit` (int32), `account_full_number` (int32)
+
+---
+
+## Event Processing Pattern
+
+Follow the poll-process-acknowledge pattern:
+
+1. **Poll**: `GET /v1/events?delivered=false` to fetch undelivered events
+2. **Process**: iterate each event, switch on `kind`, handle the nested `log`
+3. **Acknowledge**: after successful processing, `PATCH /v1/events/{id}` to mark delivered
+4. **Deduplicate**: store processed event IDs locally — events may be delivered more than once
+5. **Repeat**: poll on an interval (e.g. every 30 seconds)
+
+---
+
+## Error Response Format
+
+Error responses have the shape: `{ "kind": ERROR_KIND }`
+
+Error kinds vary by endpoint:
+
+- **Create Trade Quote**: `"BelowMinimum"` | `{ "Other": "message" }`
+- **Accept Trade Quote**: `"InsufficientBalance"` | `"InsufficientLimit"` | `{ "Other": "message" }`
+- **Create USDT Withdrawal**: `"InsufficientBalance"` | `{ "Other": "message" }`
+- **Create Pix Outflow**: `{ "Other": "message" }`
+
+Always handle 429 (rate limit) with exponential backoff.
+```
+</CodeGroup>
+
+## Example prompts
+
+Once the skill is configured, try:
+
+```
+Generate a TypeScript client for the Bipa Infra Events API
+```
+
+```
+How does the Pix key lifecycle work?
+```
+
+```
+Create an event processor that handles pix inflow state changes
+```
+
+```
+Show me how to create a USDT withdrawal in Python
+```
+
+## Sandbox-first development
+
+All generated code defaults to the sandbox environment (`https://api-sandbox.bipa.app`). Test your integration there before switching to production (`https://api.bipa.app`).
