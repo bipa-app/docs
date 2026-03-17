@@ -41,6 +41,7 @@
       },
       {
         "tab": "API Reference",
+        "openapi": "https://api.bipa.app/docs/openapi.json",
         "groups": [
           {
             "group": "Getting Started",
@@ -122,7 +123,6 @@
       "github": "https://github.com/bipa-app"
     }
   },
-  "openapi": "api-reference/openapi.json",
   "api": {
     "baseUrl": "https://api-sandbox.bipa.app"
   },
