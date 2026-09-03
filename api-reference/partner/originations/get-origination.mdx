@@ -1,0 +1,44 @@
+---
+title: "Get Origination"
+api: "GET /v1/originations/{id}"
+description: "The current safe representation of an origination."
+---
+
+Returns the state, stage, action, timestamps, deadline, and, when the person has something to do, the `user_url`. Poll it every 5 to 15 seconds during the first minute, then back off to 60 seconds. Terminal states never change.
+
+## Path
+
+<ParamField path="id" type="string" required>
+  The `origination_id` returned on submission.
+</ParamField>
+
+## Response
+
+The same representation as [Create Origination](/api-reference/partner/originations/create-origination). A `404` means the id is unknown to your credential, whether because it does not exist or because it belongs to another partner.
+
+<ResponseExample>
+```json 200 OK
+{
+  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "state": "approved",
+  "stage": "awaiting_activation",
+  "action_required": "activate",
+  "created_at": "2026-09-15T14:03:22Z",
+  "updated_at": "2026-09-16T10:00:00Z",
+  "deadline_at": "2026-10-16T10:00:00Z",
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd22"
+}
+```
+
+```json 200 OK (terminal)
+{
+  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "state": "settled",
+  "stage": "terminal",
+  "action_required": "settled",
+  "created_at": "2026-09-15T14:03:22Z",
+  "updated_at": "2026-09-20T18:31:04Z",
+  "deadline_at": null
+}
+```
+</ResponseExample>
