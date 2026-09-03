@@ -15,7 +15,7 @@ Submits an immutable envelope for one person. Bipa answers `201` with the curren
   `{ "type": "cpf", "value": "64780788099" }`. Eleven digits, no mask.
 </ParamField>
 <ParamField body="email" type="string" required>
-  Valid email, normalized to lowercase.
+  Valid email, normalized to lowercase. If both `email` and `phone` belong to other people's Bipa accounts the submission is refused with `422 contact_conflict`.
 </ParamField>
 <ParamField body="phone" type="string" required>
   Valid E.164 phone.
