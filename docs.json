@@ -32,6 +32,14 @@
             "pages": ["sandbox-users"]
           },
           {
+            "group": "Originations",
+            "icon": "user-plus",
+            "iconColor": "#14B8A6",
+            "pages": [
+              "originations"
+            ]
+          },
+          {
             "group": "Events",
             "icon": "bell",
             "iconColor": "#F59E0B",
@@ -93,6 +101,16 @@
             "iconColor": "#06B6D4",
             "pages": [
               "api-reference/partner/withdrawals/create-withdrawal"
+            ]
+          },
+          {
+            "group": "Originations",
+            "icon": "user-plus",
+            "iconColor": "#14B8A6",
+            "pages": [
+              "api-reference/partner/originations/create-origination",
+              "api-reference/partner/originations/get-origination",
+              "api-reference/partner/originations/update-contacts"
             ]
           }
         ]
