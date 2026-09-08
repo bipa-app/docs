@@ -13,12 +13,24 @@ X-API-Key: bipa_prod_xxxxxxxxxxxx
 
 ## Key types
 
-Bipa provides two types of API keys:
+We issue keys under these labels:
 
-| Prefix | Environment | Purpose |
-|--------|-------------|---------|
-| `bipa_prod_` | Production | Real transactions with real money |
-| `bipa_test_` | Sandbox | Testing and development |
+| Prefix | Environment | Issued to |
+|--------|-------------|-----------|
+| `bipa_prod_` | Production | Partners operating customers, Pix, trades and withdrawals |
+| `bipa_test_` | Sandbox | The same, against staging and testnets |
+| `ponte_prod_` | Production | Originators |
+| `ponte_test_` | Sandbox | Originators, against staging and testnets |
+
+The prefix is a label, not a permission. What a key can reach is decided by the
+account it belongs to, so a key sent to an API its account does not cover answers
+`404`, the same as an unknown resource. Reaching for the wrong prefix will not
+open anything extra.
+
+Because the prefix is only a label, an originator may also send its key under the
+generic `orig_prod_` / `orig_test_` form. Write your integration against whichever
+you prefer — the part after the prefix is what identifies the key, and it does not
+change when the label does.
 
 <Warning>
   Never expose your API keys in client-side code, public repositories, or logs. Treat them like passwords.
