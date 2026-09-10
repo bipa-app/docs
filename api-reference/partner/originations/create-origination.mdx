@@ -38,7 +38,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 
 ## Response
 
-<ResponseField name="origination_id" type="string">
+<ResponseField name="migration_id" type="string">
   The id you poll. A UUIDv7.
 </ResponseField>
 <ResponseField name="state" type="string">
@@ -146,7 +146,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 <ResponseExample>
 ```json 201 Created
 {
-  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
   "state": "pending",
   "stage": "validating",
   "action_required": "none",
@@ -158,7 +158,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 
 ```json 201 Created — contact conflict
 {
-  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
   "state": "denied",
   "stage": "terminal",
   "action_required": "denied",

@@ -125,7 +125,7 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `403` | | Source IP outside your allowlist. |
 | `404` | | Unknown id, or not yours. |
 | `409` | `external_id_reused` | Same `external_id`, different envelope. |
-| `409` | `origination_already_active` | This tax id already has a `pending` or `approved` origination. |
+| `409` | `migration_already_active` | This tax id already has a `pending` or `approved` origination. |
 | `413` | | Body over 4 MB. |
 | `422` | `pj_not_supported` | A CNPJ. |
 | `422` | `unsupported_asset` | Unsupported asset or network, or a duplicate position. |
