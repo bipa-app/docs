@@ -25,7 +25,10 @@ Full documentation: https://docs.bipa.tech
 
 - All requests use the `X-API-Key` header
 - Read the key from an environment variable (`BIPA_API_KEY`), never hardcode it
-- Key prefixes: `bipa_prod_` (production), `bipa_test_` (sandbox)
+- Key prefixes are labels, not permissions: `bipa_prod_` / `bipa_test_` are issued
+  to partners operating customers, Pix, trades and withdrawals, `ponte_prod_` /
+  `ponte_test_` to originators, and an originator may also send `orig_prod_` /
+  `orig_test_`. Access follows the account, not the prefix
 
 ## Environments
 
