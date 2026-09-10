@@ -9,7 +9,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 ## Request
 
 <ParamField body="external_id" type="string" required>
-  Your identifier for this attempt, 1 to 64 characters. Reuse it only for byte-equivalent retries.
+  Your identifier for this attempt, 1 to 64 characters. Reuse it only for retries with the same normalized content.
 </ParamField>
 <ParamField body="tax_id" type="object" required>
   `{ "type": "cpf", "value": "64780788099" }`. Eleven digits, no mask.
@@ -21,13 +21,13 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   Valid E.164 phone.
 </ParamField>
 <ParamField body="consents" type="object" required>
-  `data_sharing` and `bipa_terms`, each with `accepted_at`, `ip`, `user_agent`, `document_version`, `document_digest_sha256`, and `locale`.
+  `data_sharing` and `terms_of_service`, each with `accepted_at`, `ip`, `user_agent`, `document_version`, `document_digest_sha256`, and `locale`.
 </ParamField>
 <ParamField body="kyc" type="object" required>
   `level` is `basic` or `full`. For `full`, also `selfie_file_url` and `document_files` (at most one `front` and one `back`, each with `side` and `file_url`).
 </ParamField>
 <ParamField body="balances" type="array" required>
-  The complete portfolio of non-zero positions, or an empty list. Each item: `asset`, `network`, `contract` (or `null`), `decimal_scale`, and `quantity` as a string of digits in the smallest unit.
+  The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset`, `network`, and `quantity`. The quantity is a positive integer string in the asset's smallest unit. See [Balances and funding](/originations#balances-and-funding) for supported asset/network pairs, fixed units, and settlement availability. Do not send `contract` or `decimal_scale`.
 </ParamField>
 <ParamField body="address" type="object">
   Optional. `zip_code`, `street`, `number`, `complement` (optional), `district`, `city`, `state`, `country`.
@@ -79,7 +79,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
       "document_digest_sha256": "4b1c4f846fbf4a102ab4e5c9c6591fd94c16e2f754b32a657ce3519674d3de25",
       "locale": "pt-BR"
     },
-    "bipa_terms": {
+    "terms_of_service": {
       "accepted_at": "2026-09-15T14:03:22Z",
       "ip": "177.32.10.8",
       "user_agent": "Partner/4.12.0 (Android 14; SM-S918B)",
@@ -97,8 +97,8 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
     ]
   },
   "balances": [
-    { "asset": "BRL", "network": "brl", "contract": null, "decimal_scale": 2, "quantity": "152030" },
-    { "asset": "BTC", "network": "bitcoin", "contract": null, "decimal_scale": 8, "quantity": "1250000" }
+    { "asset": "BRL", "network": "brl", "quantity": "152030" },
+    { "asset": "BTC", "network": "bitcoin", "quantity": "1250000" }
   ],
   "address": {
     "zip_code": "30130010",
@@ -128,7 +128,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
       "document_digest_sha256": "4b1c4f846fbf4a102ab4e5c9c6591fd94c16e2f754b32a657ce3519674d3de25",
       "locale": "pt-BR"
     },
-    "bipa_terms": {
+    "terms_of_service": {
       "accepted_at": "2026-09-15T14:03:22Z",
       "ip": "177.32.10.8",
       "user_agent": "Partner/4.12.0 (iOS 26.0; iPhone)",

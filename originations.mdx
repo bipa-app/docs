@@ -30,11 +30,11 @@ The envelope is immutable. Retrying the same `external_id` with the same normali
 | `external_id` | 1 to 64 characters. Your identifier for this attempt. A new attempt after `denied` or `expired` uses a new value. |
 | `tax_id` | `{ "type": "cpf", "value": "..." }`. 11 digits, no mask. `cnpj` answers `422 pj_not_supported` for now. |
 | `email`, `phone` | A valid email, lowercased; a valid E.164 phone. If both belong to other people's Bipa accounts, Bipa stores the complete envelope and returns it immediately as `denied`; direct the person to Bipa support. If only one conflicts, the other becomes the person's login contact. |
-| `consents.data_sharing`, `consents.bipa_terms` | Two separate proofs: `accepted_at` (RFC 3339, UTC), `ip`, `user_agent` (up to 512 characters), `document_version`, `document_digest_sha256` (64 hex characters of the rendered text), `locale` (BCP 47). |
+| `consents.data_sharing`, `consents.terms_of_service` | Two separate proofs: `accepted_at` (RFC 3339, UTC), `ip`, `user_agent` (up to 512 characters), `document_version`, `document_digest_sha256` (64 hex characters of the rendered text), `locale` (BCP 47). |
 | `kyc.level` | `basic` or `full`. |
 | `kyc.selfie_file_url` | Required for `full`. A pre-signed HTTPS URL on the host you registered with Bipa. |
 | `kyc.document_files` | Required and non-empty for `full`: at most one `front` and one `back`, each `{ "side", "file_url" }`. You do not tell us the document type; Bipa classifies it. |
-| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, network, contract, decimal_scale, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
+| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, network, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
 | `address` | Optional. When present every field is required except `complement`. |
 | `bureau_blobs` | Optional. One item per `dataset` (`basic_data`, `processes`, `financial_data`, `kyc`), the provider's raw payload, up to 256 KiB each. |
 
@@ -86,6 +86,28 @@ Every entry into a pending stage starts a 30-day deadline, and `awaiting_activat
 
 ## Balances and funding
 
+Each balance contains only `asset`, `network`, and `quantity`. Bipa defines the units for each asset. Do not send `contract` or `decimal_scale`; these unknown fields return `400 malformed_payload`.
+
+| Asset | Network | Decimal places |
+|---|---|---|
+| BRL | `brl` | 2 |
+| BTC | `bitcoin` | 8 |
+| USDT | `ethereum` | 6 |
+| ETH | `ethereum` | 18 |
+| SOL | `solana` | 9 |
+| USDC | `ethereum` | 6 |
+| XRP | `xrp` | 6 |
+
+`quantity` must be a positive integer string matching `^[1-9][0-9]*$`. For example, `"100000000"` means 1 BTC, and `"1000000"` means 1 USDT or 1 XRP. Do not send a JSON number, a decimal fraction, or a zero position.
+
+Asset symbols and network names are case-sensitive. An unsupported pair or duplicate position returns `422 unsupported_asset`. BNB is not supported. Submit the complete portfolio; do not omit an unsupported position to make the request pass.
+
+<Info>
+  ETH, SOL, USDC, and XRP are accepted at intake, but their funding and settlement are not yet available. A portfolio containing any of these assets cannot proceed to funding or settlement yet.
+</Info>
+
+Bipa selects the on-chain asset for the environment through its custody integration. You do not supply a token contract address in either sandbox or production.
+
 Balances you hand over are funded from your own Bipa account. When Bipa approves the person it reserves the complete portfolio in a per-origination escrow; when the person activates, the escrow settles into their account in one transaction. There is no partial settlement: an error, a shortfall, or a crash moves nothing or the whole portfolio.
 
 Keep your Bipa account funded ahead of the portfolios you have submitted. An origination that finds your account short waits in `awaiting_funding` until the balance is there.
@@ -106,7 +128,7 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `409` | `origination_already_active` | This tax id already has a `pending` or `approved` origination. |
 | `413` | | Body over 4 MB. |
 | `422` | `pj_not_supported` | A CNPJ. |
-| `422` | `unsupported_asset` | Asset, network, contract, or scale outside the launch registry. |
+| `422` | `unsupported_asset` | Unsupported asset or network, or a duplicate position. |
 | `422` | `already_originated` | This tax id was already settled. |
 | `429` | | Rate limit. Honor `Retry-After`. |
 | `500` | `internal` | Internal failure, no sensitive detail. |
