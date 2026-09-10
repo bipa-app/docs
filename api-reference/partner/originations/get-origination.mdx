@@ -9,7 +9,7 @@ Returns the state, stage, action, timestamps, deadline, and, when the person has
 ## Path
 
 <ParamField path="id" type="string" required>
-  The `origination_id` returned on submission.
+  The `migration_id` returned on submission.
 </ParamField>
 
 ## Response
@@ -19,7 +19,7 @@ The same representation as [Create Origination](/api-reference/partner/originati
 <ResponseExample>
 ```json 200 OK
 {
-  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
   "state": "approved",
   "stage": "awaiting_activation",
   "action_required": "activate",
@@ -32,7 +32,7 @@ The same representation as [Create Origination](/api-reference/partner/originati
 
 ```json 200 OK (terminal)
 {
-  "origination_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
   "state": "settled",
   "stage": "terminal",
   "action_required": "settled",
