@@ -34,7 +34,7 @@ The envelope is immutable. Retrying the same `external_id` with the same normali
 | `kyc.level` | `basic` or `full`. |
 | `kyc.selfie_file_url` | Required for `full`. A pre-signed HTTPS URL on the host you registered with Bipa. |
 | `kyc.document_files` | Required and non-empty for `full`: at most one `front` and one `back`, each `{ "side", "file_url" }`. You do not tell us the document type; Bipa classifies it. |
-| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, network, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
+| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
 | `address` | Optional. When present every field is required except `complement`. |
 | `bureau_blobs` | Optional. One item per `dataset` (`basic_data`, `processes`, `financial_data`, `kyc`), the provider's raw payload, up to 256 KiB each. |
 
@@ -86,21 +86,21 @@ Every entry into a pending stage starts a 30-day deadline, and `awaiting_activat
 
 ## Balances and funding
 
-Each balance contains only `asset`, `network`, and `quantity`. Bipa defines the units for each asset. Do not send `contract` or `decimal_scale`; these unknown fields return `400 malformed_payload`.
+Each balance contains only `asset` and `quantity`. Bipa defines the units for each asset. Do not send `network`, `contract`, or `decimal_scale`; these unknown fields return `400 malformed_payload`.
 
-| Asset | Network | Decimal places |
-|---|---|---|
-| BRL | `brl` | 2 |
-| BTC | `bitcoin` | 8 |
-| USDT | `ethereum` | 6 |
-| ETH | `ethereum` | 18 |
-| SOL | `solana` | 9 |
-| USDC | `ethereum` | 6 |
-| XRP | `xrp` | 6 |
+| Asset | Decimal places |
+|---|---|
+| BRL | 2 |
+| BTC | 8 |
+| USDT | 6 |
+| ETH | 18 |
+| SOL | 9 |
+| USDC | 6 |
+| XRP | 6 |
 
 `quantity` must be a positive integer string matching `^[1-9][0-9]*$`. For example, `"100000000"` means 1 BTC, and `"1000000"` means 1 USDT or 1 XRP. Do not send a JSON number, a decimal fraction, or a zero position.
 
-Asset symbols and network names are case-sensitive. An unsupported pair or duplicate position returns `422 unsupported_asset`. BNB is not supported. Submit the complete portfolio; do not omit an unsupported position to make the request pass.
+Asset symbols are case-sensitive. An unsupported asset or duplicate position returns `422 unsupported_asset`. BNB is not supported. Submit the complete portfolio; do not omit an unsupported position to make the request pass.
 
 <Info>
   ETH, SOL, USDC, and XRP are accepted at intake, but their funding and settlement are not yet available. A portfolio containing any of these assets cannot proceed to funding or settlement yet.
@@ -128,7 +128,7 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `409` | `migration_already_active` | This tax id already has a `pending` or `approved` origination. |
 | `413` | | Body over 4 MB. |
 | `422` | `pj_not_supported` | A CNPJ. |
-| `422` | `unsupported_asset` | Unsupported asset or network, or a duplicate position. |
+| `422` | `unsupported_asset` | Unsupported asset, or a duplicate position. |
 | `422` | `already_originated` | This tax id was already settled. |
 | `429` | | Rate limit. Honor `Retry-After`. |
 | `500` | `internal` | Internal failure, no sensitive detail. |

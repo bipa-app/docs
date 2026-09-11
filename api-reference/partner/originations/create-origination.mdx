@@ -27,7 +27,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   `level` is `basic` or `full`. For `full`, also `selfie_file_url` and `document_files` (at most one `front` and one `back`, each with `side` and `file_url`).
 </ParamField>
 <ParamField body="balances" type="array" required>
-  The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset`, `network`, and `quantity`. The quantity is a positive integer string in the asset's smallest unit. See [Balances and funding](/originations#balances-and-funding) for supported asset/network pairs, fixed units, and settlement availability. Do not send `contract` or `decimal_scale`.
+  The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset` and `quantity`. The quantity is a positive integer string in the asset's smallest unit. See [Balances and funding](/originations#balances-and-funding) for supported assets, fixed units, and settlement availability. Do not send `network`, `contract`, or `decimal_scale`.
 </ParamField>
 <ParamField body="address" type="object">
   Optional. `zip_code`, `street`, `number`, `complement` (optional), `district`, `city`, `state`, `country`.
@@ -97,8 +97,8 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
     ]
   },
   "balances": [
-    { "asset": "BRL", "network": "brl", "quantity": "152030" },
-    { "asset": "BTC", "network": "bitcoin", "quantity": "1250000" }
+    { "asset": "BRL", "quantity": "152030" },
+    { "asset": "BTC", "quantity": "1250000" }
   ],
   "address": {
     "zip_code": "30130010",
