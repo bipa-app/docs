@@ -109,7 +109,8 @@
             "iconColor": "#14B8A6",
             "pages": [
               "api-reference/partner/originations/create-origination",
-              "api-reference/partner/originations/get-origination"
+              "api-reference/partner/originations/get-origination",
+              "api-reference/partner/originations/sandbox-examples"
             ]
           }
         ]
