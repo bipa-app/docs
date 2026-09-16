@@ -1,0 +1,310 @@
+---
+title: "Sandbox migration examples"
+description: "Four complete requests for partner frontend testing, with explicit customer and review events."
+---
+
+<Warning>
+These controls require the sandbox simulation rollout. They are not available in production. Until the backend and configuration rollout is complete, the fixture/event routes return `404`; an ordinary deployment rejects the `sandbox` field. Do not treat these examples as proof of a completed deployment.
+</Warning>
+
+Use `https://api-sandbox.agentispay.co/migrations`. Each block is **one copyable command**: replace only `REPLACE_WITH_YOUR_SANDBOX_API_KEY`. It runs Bash and requires `curl` and `jq`.
+
+The first request obtains a fresh synthetic identity and signed document URLs. The complete import JSON is visible below, printed before submission and saved to a local `.request.json` file. It contains no real documents. Each run starts a new test; replay the saved JSON to retry the same import.
+
+Quantities are integer strings in base units: BTC 8 decimals, USDT/USDC/XRP 6, ETH 18 and SOL 9. Send only `asset` and `quantity` in balances. Omit `network`, `contract` and `decimal_scale`.
+
+## 1. Basic KYC
+
+Expect `awaiting_onboarding`. Send `complete_customer_kyc` to simulate the customer completing Bipa KYC.
+
+```sh
+bash -c '
+set -euo pipefail
+API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
+FIXTURE=$(curl --silent --show-error --fail-with-body \
+  "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved" \
+  --header "X-API-Key: $API_KEY")
+REQUEST=$(cat <<JSON
+{
+  "external_id": $(printf "%s" "$FIXTURE" | jq ".external_id"),
+  "tax_id": { "type": "cpf", "value": $(printf "%s" "$FIXTURE" | jq ".tax_id.value") },
+  "email": $(printf "%s" "$FIXTURE" | jq ".email"),
+  "phone": $(printf "%s" "$FIXTURE" | jq ".phone"),
+  "consents": {
+    "data_sharing": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.data_sharing.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "terms_of_service": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.terms_of_service.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "kyc": { "level": "basic" },
+  "address": {
+    "zip_code": "58051340", "street": "Rua Luiz Primola", "number": "180",
+    "district": "Bancarios", "city": "Joao Pessoa", "state": "PB", "country": "BR"
+  },
+  "balances": [
+    {"asset": "BTC", "quantity": "1000000"},
+    {"asset": "USDT", "quantity": "1000000"}
+  ],
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+}
+JSON
+)
+printf "%s\n" "$REQUEST" | jq . | tee 01-basic.request.json
+curl --silent --show-error --fail-with-body --include \
+  "https://api-sandbox.agentispay.co/migrations" \
+  --header "X-API-Key: $API_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @01-basic.request.json
+'
+```
+
+## 2. Full KYC, address and six assets
+
+After import checks and funding, expect `awaiting_activation`. Send `activate_customer` to simulate contact verification and activation.
+
+```sh
+bash -c '
+set -euo pipefail
+API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
+FIXTURE=$(curl --silent --show-error --fail-with-body \
+  "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved" \
+  --header "X-API-Key: $API_KEY")
+REQUEST=$(cat <<JSON
+{
+  "external_id": $(printf "%s" "$FIXTURE" | jq ".external_id"),
+  "tax_id": { "type": "cpf", "value": $(printf "%s" "$FIXTURE" | jq ".tax_id.value") },
+  "email": $(printf "%s" "$FIXTURE" | jq ".email"),
+  "phone": $(printf "%s" "$FIXTURE" | jq ".phone"),
+  "consents": {
+    "data_sharing": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.data_sharing.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "terms_of_service": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.terms_of_service.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "kyc": {
+    "level": "full",
+    "selfie_file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.selfie_file_url"),
+    "document_files": [
+      { "side": "front", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[0].file_url") },
+      { "side": "back", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[1].file_url") }
+    ]
+  },
+  "address": {
+    "zip_code": "58051340", "street": "Rua Luiz Primola", "number": "180",
+    "district": "Bancarios", "city": "Joao Pessoa", "state": "PB", "country": "BR"
+  },
+  "balances": [
+    {"asset": "BTC", "quantity": "116516515"},
+    {"asset": "USDT", "quantity": "8974655"},
+    {"asset": "ETH", "quantity": "1000000000000000000"},
+    {"asset": "SOL", "quantity": "1000000000"},
+    {"asset": "USDC", "quantity": "1000000"},
+    {"asset": "XRP", "quantity": "1000000"}
+  ],
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+}
+JSON
+)
+printf "%s\n" "$REQUEST" | jq . | tee 02-full.request.json
+curl --silent --show-error --fail-with-body --include \
+  "https://api-sandbox.agentispay.co/migrations" \
+  --header "X-API-Key: $API_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @02-full.request.json
+'
+```
+
+## 3. Unreadable document, then recovery
+
+The fixture serves an unreadable front document. Expect `document_recapture_required`, with `action_required: recapture_document`. Send `complete_customer_kyc`; the customer follows Bipa KYC and retains the same migration ID.
+
+```sh
+bash -c '
+set -euo pipefail
+API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
+FIXTURE=$(curl --silent --show-error --fail-with-body \
+  "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=document_recapture" \
+  --header "X-API-Key: $API_KEY")
+REQUEST=$(cat <<JSON
+{
+  "external_id": $(printf "%s" "$FIXTURE" | jq ".external_id"),
+  "tax_id": { "type": "cpf", "value": $(printf "%s" "$FIXTURE" | jq ".tax_id.value") },
+  "email": $(printf "%s" "$FIXTURE" | jq ".email"),
+  "phone": $(printf "%s" "$FIXTURE" | jq ".phone"),
+  "consents": {
+    "data_sharing": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.data_sharing.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "terms_of_service": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.terms_of_service.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "kyc": {
+    "level": "full",
+    "selfie_file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.selfie_file_url"),
+    "document_files": [
+      { "side": "front", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[0].file_url") },
+      { "side": "back", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[1].file_url") }
+    ]
+  },
+  "address": {
+    "zip_code": "58051340", "street": "Rua Luiz Primola", "number": "180",
+    "district": "Bancarios", "city": "Joao Pessoa", "state": "PB", "country": "BR"
+  },
+  "balances": [
+    {"asset": "BTC", "quantity": "1000000"},
+    {"asset": "USDT", "quantity": "1000000"}
+  ],
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+}
+JSON
+)
+printf "%s\n" "$REQUEST" | jq . | tee 03-recapture.request.json
+curl --silent --show-error --fail-with-body --include \
+  "https://api-sandbox.agentispay.co/migrations" \
+  --header "X-API-Key: $API_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @03-recapture.request.json
+'
+```
+
+## 4. Manual review and terminal outcomes
+
+Expect `manual_review`. Choose `approve_review` to continue, `reject_review` to test denial, or `expire_migration` to test expiry. Each choice closes or advances this test; rerun this example to try a different choice. To test activation review instead, change only the fixture query to `scenario=activation_manual_review`, then send `activate_customer` before the review decision.
+
+```sh
+bash -c '
+set -euo pipefail
+API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
+FIXTURE=$(curl --silent --show-error --fail-with-body \
+  "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=import_manual_review" \
+  --header "X-API-Key: $API_KEY")
+REQUEST=$(cat <<JSON
+{
+  "external_id": $(printf "%s" "$FIXTURE" | jq ".external_id"),
+  "tax_id": { "type": "cpf", "value": $(printf "%s" "$FIXTURE" | jq ".tax_id.value") },
+  "email": $(printf "%s" "$FIXTURE" | jq ".email"),
+  "phone": $(printf "%s" "$FIXTURE" | jq ".phone"),
+  "consents": {
+    "data_sharing": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.data_sharing.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "terms_of_service": {
+      "accepted_at": $(printf "%s" "$FIXTURE" | jq ".consents.terms_of_service.accepted_at"),
+      "ip": "192.0.2.1", "locale": "pt-BR", "user_agent": "PartnerSandbox/1.0",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "kyc": {
+    "level": "full",
+    "selfie_file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.selfie_file_url"),
+    "document_files": [
+      { "side": "front", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[0].file_url") },
+      { "side": "back", "file_url": $(printf "%s" "$FIXTURE" | jq ".kyc.document_files[1].file_url") }
+    ]
+  },
+  "address": {
+    "zip_code": "58051340", "street": "Rua Luiz Primola", "number": "180",
+    "district": "Bancarios", "city": "Joao Pessoa", "state": "PB", "country": "BR"
+  },
+  "balances": [
+    {"asset": "BTC", "quantity": "1000000"},
+    {"asset": "USDT", "quantity": "1000000"}
+  ],
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+}
+JSON
+)
+printf "%s\n" "$REQUEST" | jq . | tee 04-review.request.json
+curl --silent --show-error --fail-with-body --include \
+  "https://api-sandbox.agentispay.co/migrations" \
+  --header "X-API-Key: $API_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @04-review.request.json
+'
+```
+
+## Advance a migration
+
+Replace the key and returned migration UUID. This example approves a pending **simulated** review:
+
+```sh
+curl --silent --show-error --fail-with-body --include \
+  'https://api-sandbox.agentispay.co/migrations/MIGRATION_ID/sandbox-events' \
+  --header 'X-API-Key: REPLACE_WITH_YOUR_SANDBOX_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"idempotency_key":"review-1","event":"approve_review"}'
+```
+
+Use these complete JSON bodies for the relevant action:
+
+| Current stage | Event JSON | What to expect |
+|---|---|---|
+| `awaiting_onboarding` or `document_recapture_required` | `{"idempotency_key":"kyc-1","event":"complete_customer_kyc"}` | Normal KYC progresses toward settlement; insufficient liquidity can pause it. |
+| `awaiting_activation` | `{"idempotency_key":"activation-1","event":"activate_customer"}` | Activation checks run, then settlement or a review/denial. |
+| `manual_review` in example 4 | `{"idempotency_key":"review-1","event":"approve_review"}` | Import resumes toward funding and activation. |
+| Pending simulated review | `{"idempotency_key":"review-1","event":"reject_review"}` | `state: denied`, `stage: terminal`, `action_required: denied`. |
+| Any nonterminal stage | `{"idempotency_key":"expiry-1","event":"expire_migration"}` | `state: expired`, `stage: terminal`, `action_required: expired`; reserved assets are returned. |
+
+For an approved activation review, send `activate_customer` again with a **new** key such as `activation-after-review`. This represents the customer resuming after Bipa reviewed the evidence.
+
+Events return `202` while pending and `200` when completed. Replay the identical event to check its completion. Reusing a key with different content returns `409 idempotency_key_reused`; an event in the wrong stage returns `409 simulation_event_not_ready`. Only the owner can access the migration and its events. `approve_review` and `reject_review` apply only to the dedicated simulated review scenarios.
+
+## Funding and polling
+
+If any example reaches `awaiting_funding`, fund the missing base-unit amounts. For the two-asset examples:
+
+```json
+{
+  "idempotency_key": "funding-1",
+  "event": "fund_originator",
+  "balances": [
+    { "asset": "BTC", "quantity": "1000000" },
+    { "asset": "USDT", "quantity": "1000000" }
+  ]
+}
+```
+
+For example 2, use its complete six-asset `balances` array. This event credits sandbox test liquidity; it does not represent a real deposit. To reliably test `awaiting_funding`, Bipa must prepare an underfunded test account. A previously funded account may proceed directly to activation or settlement.
+
+```sh
+curl --silent --show-error --fail-with-body \
+  'https://api-sandbox.agentispay.co/migrations/MIGRATION_ID' \
+  --header 'X-API-Key: REPLACE_WITH_YOUR_SANDBOX_API_KEY'
+```
+
+Poll every 5–15 seconds. Observe `state`, `stage` and `action_required` together. `approved` means import approval; only `settled` means migration completion. Terminal results all have `stage: terminal`, with `state` and `action_required` identifying `settled`, `denied` or `expired`.
+
+For a stable `validating` test, use `scenario=provider_unavailable` with example 2. Send `{"idempotency_key":"provider-1","event":"recover_provider"}` before retries are exhausted to continue.
+
+## Retry and conflict behavior
+
+Replay the saved import JSON with the same key: expect `200` and the original `migration_id`. Change only `external_id` while the migration remains active: expect `409 migration_already_active` with that same ID for your account. Change the body while keeping the original `external_id`: expect `409 external_id_reused`.
+
+Document recapture and manual review remain on the same migration. Continue polling; the partner does not need to import the person again. Bipa must provide the working customer handoff for real recapture; the sandbox event simulates that customer action.

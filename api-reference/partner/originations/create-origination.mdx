@@ -183,7 +183,14 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 }
 ```
 
-```json 409 Conflict
+```json 409 — active migration owned by your account
+{
+  "code": "migration_already_active",
+  "migration_id": "01994622-86a0-7000-8000-000000000001"
+}
+```
+
+```json 409 — changed request under the same external_id
 { "code": "external_id_reused" }
 ```
 </ResponseExample>

@@ -169,7 +169,7 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `403` | | Source IP outside your allowlist. |
 | `404` | | Unknown id, or not yours. |
 | `409` | `external_id_reused` | Same `external_id`, different envelope. |
-| `409` | `migration_already_active` | This tax id already has a `pending` or `approved` origination. |
+| `409` | `migration_already_active` | This tax id already has an active origination. `migration_id` identifies it when it belongs to your account. |
 | `413` | | Body over 4 MB. |
 | `422` | `pj_not_supported` | A CNPJ. |
 | `422` | `unsupported_asset` | Unsupported asset, or a duplicate position. |
@@ -178,4 +178,17 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `500` | `internal` | Internal failure, no sensitive detail. |
 | `503` | `temporarily_unavailable` | Intake paused or a dependency down. Retry with backoff. |
 
-Errors have the shape `{ "code": "..." }`.
+Errors contain `code`. An active-migration conflict also includes `migration_id` when that migration belongs to your originator account:
+
+```json
+{
+  "code": "migration_already_active",
+  "migration_id": "01994622-86a0-7000-8000-000000000001"
+}
+```
+
+Poll the returned ID instead of submitting a new migration. Conflicts with another originator omit the ID. An identical request with the original `external_id` still returns `200` with the existing migration.
+
+A document that cannot be read or validated can require `document_recapture_required` or `manual_review`. These are nonterminal: Bipa handles customer recapture or review on the same migration. Continue polling that ID; do not create another import for that person. `denied` is a terminal rejection, distinct from a request for more evidence.
+
+For controlled frontend tests, see [Sandbox migration examples](/api-reference/partner/originations/sandbox-examples).
