@@ -29,6 +29,9 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 <ParamField body="balances" type="array" required>
   The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset` and `quantity`. The quantity is a positive integer string in the asset's smallest unit. See [Balances and funding](/originations#balances-and-funding) for supported assets, fixed units, and settlement availability. Do not send `network`, `contract`, or `decimal_scale`.
 </ParamField>
+<ParamField body="trading_history" type="object">
+  Optional or `null` when unknown. Requires `as_of` (RFC 3339, UTC), `total`, and `assets`. Both the total and each asset entry use `last_3_months_cents`, `last_12_months_cents`, and `all_time_cents`: exact non-negative integer strings in BRL cents. Each asset entry also requires `asset`. Do not send `currency` or `decimal_scale`. See [Trading history](/originations#trading-history) for window boundaries, totals, limits, normalization, and known-zero reporting.
+</ParamField>
 <ParamField body="address" type="object">
   Optional. `zip_code`, `street`, `number`, `complement` (optional), `district`, `city`, `state`, `country`.
 </ParamField>
@@ -100,6 +103,18 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
     { "asset": "BRL", "quantity": "152030" },
     { "asset": "BTC", "quantity": "1250000" }
   ],
+  "trading_history": {
+    "as_of": "2026-09-01T00:00:00Z",
+    "total": {
+      "last_3_months_cents": "1200000",
+      "last_12_months_cents": "5000000",
+      "all_time_cents": "9000000"
+    },
+    "assets": [
+      { "asset": "BTC", "last_3_months_cents": "1000000", "last_12_months_cents": "4000000", "all_time_cents": "7000000" },
+      { "asset": "XMR", "last_3_months_cents": "200000", "last_12_months_cents": "1000000", "all_time_cents": "2000000" }
+    ]
+  },
   "address": {
     "zip_code": "30130010",
     "street": "Av. Afonso Pena",
