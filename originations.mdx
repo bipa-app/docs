@@ -5,7 +5,7 @@ description: "Bring your customers to Bipa: submit a person once, let Bipa verif
 
 ## Overview
 
-An **originator** is a partner that brings people to Bipa. You submit one immutable envelope per person: their identity, the consents they gave you, optional KYC evidence you already hold, and optionally the balance they hold with you. Bipa verifies the person, creates or links their Bipa account, and, if you handed over a balance, moves it into their account once they activate.
+An **originator** is a partner that brings people to Bipa. You submit one immutable envelope per person: their identity, the consents they gave you, optional KYC evidence you already hold, optional balances they hold with you, and optional trading history. Bipa verifies the person, creates or links their Bipa account, and settles the complete imported portfolio through the appropriate KYC path.
 
 The person becomes a Bipa customer. After the origination reaches a terminal state you see nothing further about them.
 
@@ -19,7 +19,7 @@ The person becomes a Bipa customer. After the origination reaches a terminal sta
 2. **Poll.** `GET /v1/originations/{id}` returns the state, the stage, the action you should take, and a `user_url` when the person has something to do.
 3. **Read the terminal state.** `settled`, `denied`, or `expired`. Act on your own books and stop polling.
 
-Bipa never asks you to confirm what you did on your side. Every movement of value happens on Bipa's ledger, from your Bipa account into a per-origination escrow and from the escrow into the person's account, or back to you.
+Bipa never asks you to confirm what you did on your side. Every movement of value happens on Bipa's ledger, from your Bipa account through your originator’s shared escrow account into the person’s account, or back to you. Ledger records attribute each movement to its origination and asset.
 
 ## The envelope
 
@@ -37,6 +37,7 @@ The envelope is immutable. Retrying the same `external_id` with the same normali
 | `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
 | `address` | Optional. When present every field is required except `complement`. |
 | `bureau_blobs` | Optional. One item per `dataset` (`basic_data`, `processes`, `financial_data`, `kyc`), the provider's raw payload, up to 256 KiB each. |
+| `trading_history` | Optional historical gross trading values in BRL cents, by asset and total. See [Trading history](#trading-history). |
 
 Files must be JPEG or PNG, up to 10 MB, and the URLs must stay valid for at least 24 hours. Bipa copies them asynchronously. A file that cannot be used does not fail the submission; the person recaptures it inside Bipa.
 
@@ -49,7 +50,7 @@ Every representation carries a coarse `state`, a `stage`, and the `action_requir
 | `state` | `stage` | `action_required` | Meaning |
 |---|---|---|---|
 | `pending` | `validating` | `none` | Bipa is working. Keep the balance frozen and keep polling. |
-| `pending` | `awaiting_onboarding` | `standard_onboarding` | A basic-KYC person completes Bipa's normal onboarding through `user_url`. |
+| `pending` | `awaiting_onboarding` | `standard_onboarding` | A basic-KYC person completes Bipa’s normal KYC through `user_url`. |
 | `pending` | `manual_review` | `manual_review` | A compliance analyst is looking. Do not promise a timeline or a reason. |
 | `pending` | `document_recapture_required` | `recapture_document` | The person recaptures their document and selfie through `user_url`. |
 | `pending` | `awaiting_funding` | `fund_liquidity` | Your Bipa account is short of at least one asset. Nothing moved. Deposit, and Bipa retries. |
@@ -66,6 +67,9 @@ stateDiagram-v2
     validating --> awaiting_funding
     validating --> awaiting_activation
     awaiting_funding --> awaiting_activation
+    awaiting_funding --> settled
+    awaiting_onboarding --> awaiting_funding
+    document_recapture_required --> awaiting_funding
     awaiting_activation --> settled
     awaiting_onboarding --> settled
     document_recapture_required --> settled
@@ -78,11 +82,11 @@ Terminal states never change. The response never carries a fraud reason, a rule,
 
 ## Deadlines
 
-Every entry into a pending stage starts a 30-day deadline, and `awaiting_activation` starts a 30-day activation window. Always use `deadline_at` from the latest representation; do not compute it locally. A technical retry does not restart a clock. Expiry with a reserved balance returns the balance to your account before the state becomes `expired`.
+Every entry into a pending stage starts a 30-day deadline, and `awaiting_activation` starts a 30-day activation window. Always use `deadline_at` from the latest representation; do not compute it locally. A technical retry does not restart a clock. A replacement signup while funding is pending preserves the existing funding deadline. Expiry with a reserved balance returns the balance to your account before the state becomes `expired`.
 
 ## The user URL
 
-`user_url` locates the origination for the person. It does not authenticate them. To act, the person signs in to Bipa with the same tax id, or completes Bipa's onboarding. A forwarded link cannot claim anything.
+`user_url` locates the origination for the person. It does not authenticate them. To act, the person signs in to Bipa with the same tax id, or completes Bipa’s normal KYC. A forwarded link cannot claim anything.
 
 ## Balances and funding
 
@@ -102,15 +106,55 @@ Each balance contains only `asset` and `quantity`. Bipa defines the units for ea
 
 Asset symbols are case-sensitive. An unsupported asset or duplicate position returns `422 unsupported_asset`. BNB is not supported. Submit the complete portfolio; do not omit an unsupported position to make the request pass.
 
-<Info>
-  ETH, SOL, USDC, and XRP are accepted at intake, but their funding and settlement are not yet available. A portfolio containing any of these assets cannot proceed to funding or settlement yet.
-</Info>
-
 Bipa selects the on-chain asset for the environment through its custody integration. You do not supply a token contract address in either sandbox or production.
 
-Balances you hand over are funded from your own Bipa account. When Bipa approves the person it reserves the complete portfolio in a per-origination escrow; when the person activates, the escrow settles into their account in one transaction. There is no partial settlement: an error, a shortfall, or a crash moves nothing or the whole portfolio.
+Balances you hand over are funded from your own Bipa account. One escrow account belongs to your originator and holds reserved assets across customers; each origination has its own ledger references.
+
+- **Full KYC:** after import pre-approval, Bipa reserves the complete portfolio in escrow. Successful account activation settles it into the customer's account. Denial or expiry returns any reserved assets to your account.
+- **Basic KYC or document recapture:** Bipa does not reserve the portfolio at import pre-approval. Once the person completes normal KYC, account approval and the complete source → escrow → customer movement happen in one transaction. If any source asset is short, the origination waits in `awaiting_funding` and account approval waits too.
+
+There is no partial portfolio settlement: a shortfall moves nothing, and an error rolls back account approval and the associated balance movements together.
 
 Keep your Bipa account funded ahead of the portfolios you have submitted. An origination that finds your account short waits in `awaiting_funding` until the balance is there.
+
+## Trading history
+
+`trading_history` reports gross trading value, always in **BRL cents**. Asset entries identify what the person traded; their amounts are not native asset quantities. For example, `"100000"` means R$1,000.00 of traded value whether the entry is BTC, XRP, or another asset. Do not send `currency` or `decimal_scale`.
+
+| Field | Rules |
+|---|---|
+| `as_of` | RFC 3339 in UTC. The exclusive end of every window. |
+| `total` | Requires `last_3_months_cents`, `last_12_months_cents`, and `all_time_cents`. Each must equal the sum of that field across `assets`. |
+| `assets` | A complete list of the reported traded assets. An empty list is valid only when all three totals are zero. |
+| `assets[].asset` | 1–32 ASCII letters, digits, `.`, `_`, or `-`. Bipa normalizes letters to uppercase and rejects duplicates after normalization. History can include assets not supported in `balances`. |
+| `assets[].last_3_months_cents`, `.last_12_months_cents`, `.all_time_cents` | Non-negative integer strings in BRL cents. JSON numbers, signs, fractions, exponents, whitespace, and leading zeros are rejected. `"0"` is valid. Maximum per value and sum: `170141183460469231731687303715884105727`. |
+
+The same amount rules apply to `total`. For each asset and the total, `last_3_months_cents <= last_12_months_cents <= all_time_cents`.
+
+The three- and twelve-month windows use calendar months and include their starting instant. Subtract the months from `as_of` while preserving the UTC time; if the day does not exist in the starting month, use that month's last day. `all_time_cents` includes all trades before `as_of` with your originator.
+
+Gross trading value sums executed buys and sells before fees, valued in BRL at the time of each trade. Attribute each trade once to the traded asset; do not count its quote currency again. Exclude deposits, withdrawals, holdings, and profit. Do not omit an asset's activity from a reported total.
+
+Omit `trading_history` or send `null` when history is unavailable. To report known zero activity, send all three totals as `"0"` and `assets: []`. Missing history and known zero are different. All fields are required when the object is present.
+
+```json
+{
+  "trading_history": {
+    "as_of": "2026-09-01T00:00:00Z",
+    "total": {
+      "last_3_months_cents": "1200000",
+      "last_12_months_cents": "5000000",
+      "all_time_cents": "9000000"
+    },
+    "assets": [
+      { "asset": "BTC", "last_3_months_cents": "1000000", "last_12_months_cents": "4000000", "all_time_cents": "7000000" },
+      { "asset": "XMR", "last_3_months_cents": "200000", "last_12_months_cents": "1000000", "all_time_cents": "2000000" }
+    ]
+  }
+}
+```
+
+History is immutable with the envelope and stored encrypted. Changing it on a retry returns `409 external_id_reused`; reordering asset entries or changing symbol case does not change request identity. It is not returned in the origination status response. Reporting trading activity does not transfer those assets: transfers use `balances`.
 
 ## Polling
 
