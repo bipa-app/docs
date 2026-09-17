@@ -4,22 +4,25 @@ description: "Four complete requests for partner frontend testing, with explicit
 ---
 
 <Warning>
-These controls require the sandbox simulation rollout. They are not available in production. Until the backend and configuration rollout is complete, the fixture/event routes return `404`; an ordinary deployment rejects the `sandbox` field. Do not treat these examples as proof of a completed deployment.
+The simulation routes are deployed in sandbox. Live checks on 17 September 2026 confirmed imports, replay/conflict handling, review controls, funding and expiry. Customer KYC and activation events can remain pending because of a recovery-worker failure. The returned customer web link also currently returns `404`. Bipa is tracking these blockers; a `201` import response or `202` event response does not mean the migration finished. These controls are unavailable in production.
 </Warning>
 
 Use `https://api-sandbox.agentispay.co/migrations`. Each block is **one copyable command**: replace only `REPLACE_WITH_YOUR_SANDBOX_API_KEY`. It runs Bash and requires `curl` and `jq`.
 
-The first request obtains a fresh synthetic identity and signed document URLs. The complete import JSON is visible below, printed before submission and saved to a local `.request.json` file. It contains no real documents. Each run starts a new test; replay the saved JSON to retry the same import.
+The first request obtains a fresh synthetic identity and signed document URLs. The complete import JSON is visible below, printed before submission and saved to a local `.request.json` file. The response, including `migration_id`, is saved beside it as `.response.json`. It contains no real documents. Each run starts a new test; replay the saved JSON to retry the same import.
 
 Quantities are integer strings in base units: BTC 8 decimals, USDT/USDC/XRP 6, ETH 18 and SOL 9. Send only `asset` and `quantity` in balances. Omit `network`, `contract` and `decimal_scale`.
 
+Before testing, Bipa must configure the originator import policy, full-KYC activation policy and the current costs of their checks. Simulated provider calls use test data; funding events create sandbox liquidity. Policies and liquidity belong to the test account, so another account can have different readiness. The examples set simulated monthly income to `"1200000"` (R$12,000), which uses the Pro test plan. The fixture default selects Max, whose current sandbox catalog has no monthly term and blocks completion. Normal KYC also needs the simulator postal code `01310100` in Bipa’s address reference data.
+
 ## 1. Basic KYC
 
-Expect `awaiting_onboarding`. Send `complete_customer_kyc` to simulate the customer completing Bipa KYC.
+Expect `awaiting_onboarding`. Send `complete_customer_kyc` to simulate the customer completing Bipa KYC. Intake and settlement were verified after Bipa configured the registration workers and sent diagnostic wake events. Automatic completion is affected by the worker issue above. The accepted KYC level is `basic`, not `partial`.
 
 ```sh
 bash -c '
 set -euo pipefail
+umask 077
 API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
 FIXTURE=$(curl --silent --show-error --fail-with-body \
   "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved" \
@@ -53,26 +56,30 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
 JSON
 )
 printf "%s\n" "$REQUEST" | jq . | tee 01-basic.request.json
-curl --silent --show-error --fail-with-body --include \
+curl --silent --show-error --fail-with-body \
+  --output 01-basic.response.json \
+  --write-out "HTTP %{http_code}\n" \
   "https://api-sandbox.agentispay.co/migrations" \
   --header "X-API-Key: $API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @01-basic.request.json
+jq . 01-basic.response.json
 '
 ```
 
 ## 2. Full KYC, address and six assets
 
-After import checks and funding, expect `awaiting_activation`. Send `activate_customer` to simulate contact verification and activation.
+After import checks and funding, expect `awaiting_activation`. Send `activate_customer` to simulate contact verification and activation. Full-KYC Pro scenarios settled with all six assets in live tests, but needed diagnostic wake events because of the worker issue; automatic completion is not yet reliable.
 
 ```sh
 bash -c '
 set -euo pipefail
+umask 077
 API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
 FIXTURE=$(curl --silent --show-error --fail-with-body \
   "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved" \
@@ -117,26 +124,30 @@ REQUEST=$(cat <<JSON
     {"asset": "USDC", "quantity": "1000000"},
     {"asset": "XRP", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
 JSON
 )
 printf "%s\n" "$REQUEST" | jq . | tee 02-full.request.json
-curl --silent --show-error --fail-with-body --include \
+curl --silent --show-error --fail-with-body \
+  --output 02-full.response.json \
+  --write-out "HTTP %{http_code}\n" \
   "https://api-sandbox.agentispay.co/migrations" \
   --header "X-API-Key: $API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @02-full.request.json
+jq . 02-full.response.json
 '
 ```
 
 ## 3. Unreadable document, then recovery
 
-The fixture serves an unreadable front document. Expect `document_recapture_required`, with `action_required: recapture_document`. Send `complete_customer_kyc`; the customer follows Bipa KYC and retains the same migration ID.
+The fixture serves an unreadable front document. Expect `document_recapture_required`, with `action_required: recapture_document`. Send `complete_customer_kyc`; the customer follows Bipa KYC and retains the same migration ID. Recovery through normal KYC and settlement on the same migration ID were verified after Bipa configured the registration workers and sent diagnostic wake events. Automatic completion is affected by the worker issue above. Do not create another import for an unreadable document.
 
 ```sh
 bash -c '
 set -euo pipefail
+umask 077
 API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
 FIXTURE=$(curl --silent --show-error --fail-with-body \
   "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=document_recapture" \
@@ -177,16 +188,19 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
 JSON
 )
 printf "%s\n" "$REQUEST" | jq . | tee 03-recapture.request.json
-curl --silent --show-error --fail-with-body --include \
+curl --silent --show-error --fail-with-body \
+  --output 03-recapture.response.json \
+  --write-out "HTTP %{http_code}\n" \
   "https://api-sandbox.agentispay.co/migrations" \
   --header "X-API-Key: $API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @03-recapture.request.json
+jq . 03-recapture.response.json
 '
 ```
 
@@ -197,6 +211,7 @@ Expect `manual_review`. Choose `approve_review` to continue, `reject_review` to 
 ```sh
 bash -c '
 set -euo pipefail
+umask 077
 API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
 FIXTURE=$(curl --silent --show-error --fail-with-body \
   "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=import_manual_review" \
@@ -237,16 +252,19 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
 JSON
 )
 printf "%s\n" "$REQUEST" | jq . | tee 04-review.request.json
-curl --silent --show-error --fail-with-body --include \
+curl --silent --show-error --fail-with-body \
+  --output 04-review.response.json \
+  --write-out "HTTP %{http_code}\n" \
   "https://api-sandbox.agentispay.co/migrations" \
   --header "X-API-Key: $API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @04-review.request.json
+jq . 04-review.response.json
 '
 ```
 
@@ -272,9 +290,9 @@ Use these complete JSON bodies for the relevant action:
 | Pending simulated review | `{"idempotency_key":"review-1","event":"reject_review"}` | `state: denied`, `stage: terminal`, `action_required: denied`. |
 | Any nonterminal stage | `{"idempotency_key":"expiry-1","event":"expire_migration"}` | `state: expired`, `stage: terminal`, `action_required: expired`; reserved assets are returned. |
 
-For an approved activation review, send `activate_customer` again with a **new** key such as `activation-after-review`. This represents the customer resuming after Bipa reviewed the evidence.
+For an approved activation review, send `activate_customer` again with a **new** key such as `activation-after-review`. This represents the customer resuming after Bipa reviewed the evidence. The current sandbox has a confirmed issue where dependent checks remain queued after activation-review approval; Bipa must fix that path before this scenario can reliably finish. Import-review approval and rejection were verified separately.
 
-Events return `202` while pending and `200` when completed. Replay the identical event to check its completion. Reusing a key with different content returns `409 idempotency_key_reused`; an event in the wrong stage returns `409 simulation_event_not_ready`. Only the owner can access the migration and its events. `approve_review` and `reject_review` apply only to the dedicated simulated review scenarios.
+Events return `202` while pending and `200` when completed. Replay the identical event to check its completion. While the worker issue is open, an older event can still report `completed: false` even after another action settles the migration. Use GET on the migration to establish its current outcome; do not keep creating new event keys to force progress. Reusing a key with different content returns `409 idempotency_key_reused`; an event in the wrong stage returns `409 simulation_event_not_ready`. Only the owner can access the migration and its events. `approve_review` and `reject_review` apply only to the dedicated simulated review scenarios.
 
 ## Funding and polling
 
@@ -301,7 +319,7 @@ curl --silent --show-error --fail-with-body \
 
 Poll every 5–15 seconds. Observe `state`, `stage` and `action_required` together. `approved` means import approval; only `settled` means migration completion. Terminal results all have `stage: terminal`, with `state` and `action_required` identifying `settled`, `denied` or `expired`.
 
-For a stable `validating` test, use `scenario=provider_unavailable` with example 2. Send `{"idempotency_key":"provider-1","event":"recover_provider"}` before retries are exhausted to continue.
+`provider_unavailable` is not a stable way to hold `validating` in the current deployment. The live test exhausted five retries in under one second after dispatch, moved to `manual_review`, and then refused `recover_provider` with `409 simulation_event_not_ready`. Bipa must fix retry timing/recovery before partners can rely on this scenario.
 
 ## Retry and conflict behavior
 
