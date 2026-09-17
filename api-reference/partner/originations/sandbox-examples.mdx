@@ -290,7 +290,7 @@ Use these complete JSON bodies for the relevant action:
 | Pending simulated review | `{"idempotency_key":"review-1","event":"reject_review"}` | `state: denied`, `stage: terminal`, `action_required: denied`. |
 | Any nonterminal stage | `{"idempotency_key":"expiry-1","event":"expire_migration"}` | `state: expired`, `stage: terminal`, `action_required: expired`; reserved assets are returned. |
 
-For an approved activation review, send `activate_customer` again with a **new** key such as `activation-after-review`. This represents the customer resuming after Bipa reviewed the evidence.
+For an approved activation review, send `activate_customer` again with a **new** key such as `activation-after-review`. This represents the customer resuming after Bipa reviewed the evidence. The current sandbox has a confirmed issue where dependent checks remain queued after activation-review approval; Bipa must fix that path before this scenario can reliably finish. Import-review approval and rejection were verified separately.
 
 Events return `202` while pending and `200` when completed. Replay the identical event to check its completion. While the worker issue is open, an older event can still report `completed: false` even after another action settles the migration. Use GET on the migration to establish its current outcome; do not keep creating new event keys to force progress. Reusing a key with different content returns `409 idempotency_key_reused`; an event in the wrong stage returns `409 simulation_event_not_ready`. Only the owner can access the migration and its events. `approve_review` and `reject_review` apply only to the dedicated simulated review scenarios.
 
