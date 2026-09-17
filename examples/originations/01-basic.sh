@@ -1,5 +1,6 @@
 bash -c '
 set -euo pipefail
+umask 077
 API_KEY="REPLACE_WITH_YOUR_SANDBOX_API_KEY"
 FIXTURE=$(curl --silent --show-error --fail-with-body \
   "https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved" \
@@ -33,14 +34,17 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
 JSON
 )
 printf "%s\n" "$REQUEST" | jq . | tee 01-basic.request.json
-curl --silent --show-error --fail-with-body --include \
+curl --silent --show-error --fail-with-body \
+  --output 01-basic.response.json \
+  --write-out "HTTP %{http_code}\n" \
   "https://api-sandbox.agentispay.co/migrations" \
   --header "X-API-Key: $API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @01-basic.request.json
+jq . 01-basic.response.json
 '
