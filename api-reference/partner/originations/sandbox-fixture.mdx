@@ -57,7 +57,7 @@ The complete envelope, shaped exactly as Create Origination expects it. Send it 
   A sample portfolio. Replace it with the assets you want to test.
 </ResponseField>
 <ResponseField name="sandbox" type="object">
-  `scenario`, `monthly_income_cents` and `document_type`. The default income selects the Max test plan, which currently has no monthly term and blocks completion; override it to `"1200000"` for the Pro plan.
+  `scenario`, `monthly_income_cents` and `document_type`. The default income is chosen to complete; override it only to test a different plan tier.
 </ResponseField>
 
 <ResponseExample>
@@ -110,7 +110,7 @@ The complete envelope, shaped exactly as Create Origination expects it. Send it 
   ],
   "sandbox": {
     "scenario": "approved",
-    "monthly_income_cents": "2000000",
+    "monthly_income_cents": "1200000",
     "document_type": "cnh"
   }
 }

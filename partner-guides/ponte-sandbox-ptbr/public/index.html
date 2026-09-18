@@ -654,15 +654,6 @@
           </tbody>
         </table>
       </div>
-      <div class="note">
-        <p class="note-title">Uma troca que vale fazer sempre</p>
-        <p>
-          O fixture vem com <code>monthly_income_cents: "2000000"</code>, que cai no plano Max.
-          O Max hoje é vendido só em cadência anual &mdash; o cliente paga doze meses de uma vez
-          &mdash; e a migração conclui a assinatura em ciclos mensais, então o plano não fecha.
-          Troquem para <code>"1200000"</code>, que cai no Pro, e o fluxo completa.
-        </p>
-      </div>
     </section>
 
     <section id="eventos">
@@ -760,8 +751,7 @@ FIXTURE=$(curl --silent --show-error --fail-with-body \
   --header "X-API-Key: $API_KEY")
 
 printf "%s" "$FIXTURE" \
-  | jq ".sandbox.monthly_income_cents = \"1200000\"
-        | .balances = [
+  | jq ".balances = [
             {\"asset\":\"BTC\",\"quantity\":\"116516515\"},
             {\"asset\":\"USDT\",\"quantity\":\"8974655\"},
             {\"asset\":\"ETH\",\"quantity\":\"1000000000000000000\"},
