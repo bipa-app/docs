@@ -24,7 +24,7 @@ Returns a complete, ready-to-submit envelope for the scenario you name. The iden
   | `activation_rejected` | Import passes, activation checks deny; reserved assets are refunded. |
   | `activation_manual_review` | Activation checks land in `manual_review` after `activate_customer`. |
   | `protege_blocked` | The person is blocked by Protege; clear it with `unblock_protege`. |
-  | `provider_unavailable` | A provider fails; recover with `recover_provider`. |
+  | `provider_unavailable` | A provider fails. The check exhausts its retries and the migration lands in `manual_review` carrying a `retry_exhausted` flag; resolve it with `approve_review` or `reject_review`. |
   | `insufficient_funding` | Holds the migration at `awaiting_funding` until `fund_originator`. |
 </ParamField>
 

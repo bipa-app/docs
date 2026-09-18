@@ -33,7 +33,6 @@ Each event plays the part of something that happens outside your system: the cus
   | `expire_migration` | any nonterminal stage | The deadline passes. Terminal, with reserved assets refunded. |
   | `fund_originator` | `awaiting_funding` | Credits sandbox test liquidity. Requires `balances`. |
   | `unblock_protege` | `protege_blocked` | Clears the Protege block. |
-  | `recover_provider` | after a provider failure | Brings the failed provider back. |
 </ParamField>
 <ParamField body="balances" type="array">
   Required for `fund_originator`, ignored otherwise. The amounts to credit, each `{ asset, quantity }` with `quantity` a string of digits in the asset's smallest unit. Match the migration's own balances.

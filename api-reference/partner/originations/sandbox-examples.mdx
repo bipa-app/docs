@@ -319,7 +319,7 @@ curl --silent --show-error --fail-with-body \
 
 Poll every 5–15 seconds. Observe `state`, `stage` and `action_required` together. `approved` means import approval; only `settled` means migration completion. Terminal results all have `stage: terminal`, with `state` and `action_required` identifying `settled`, `denied` or `expired`.
 
-`provider_unavailable` is not a stable way to hold `validating` in the current deployment. The live test exhausted five retries in under one second after dispatch, moved to `manual_review`, and then refused `recover_provider` with `409 simulation_event_not_ready`. Bipa must fix retry timing/recovery before partners can rely on this scenario.
+`provider_unavailable` does not hold `validating`. The check retries immediately, exhausts its budget in under a second, and the migration settles in `manual_review` with the failing check flagged `retry_exhausted`. That is the outcome to test: a provider Bipa cannot reach becomes a review, not a refusal. Resolve it with `approve_review`, `reject_review` or `expire_migration`, exactly as in example 4.
 
 ## Retry and conflict behavior
 
