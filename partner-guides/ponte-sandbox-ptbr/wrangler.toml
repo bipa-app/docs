@@ -1,0 +1,16 @@
+# Vendor-neutral pt-BR guide for Projeto Ponte's sandbox, served on the same
+# agentispay.co zone as the partner API so a partner's engineers never see a
+# hostname that names the institution behind it. Assets only — no Worker code.
+#
+# Deploy from this directory:  npx wrangler@4 deploy
+name = "guia-ponte"
+account_id = "50b8c98494df7bdb8a7da9de092da374"
+compatibility_date = "2026-09-17"
+
+[assets]
+directory = "./public"
+not_found_handling = "404-page"
+
+[[routes]]
+pattern = "guia.agentispay.co"
+custom_domain = true
