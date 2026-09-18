@@ -43,7 +43,7 @@ The envelope is immutable. Retrying the same `external_id` with the same normali
 | `bureau_blobs` | Optional. One item per `dataset` (`basic_data`, `processes`, `financial_data`, `kyc`), the provider's raw payload, up to 256 KiB each. |
 | `trading_history` | Optional historical gross trading values in BRL cents, by asset and total. See [Trading history](#trading-history). |
 
-Files must be JPEG or PNG, up to 10 MB, and the URLs must stay valid for at least 24 hours. Bipa copies them asynchronously. A file that cannot be used does not fail the submission; the person recaptures it inside Bipa.
+Files must be JPEG or PNG, up to 10 MB, and the URLs must stay valid for at least 24 hours. Bipa copies them asynchronously from the public internet, so the URL host must be publicly resolvable and reachable: a hostname that only resolves inside your network, or that points at a private address, is treated as a file that cannot be used. Such a file does not fail the submission; the origination moves to `document_recapture_required` and the person recaptures it inside Bipa.
 
 The request body is limited to 4 MB. Above that the answer is `413` with no body.
 
