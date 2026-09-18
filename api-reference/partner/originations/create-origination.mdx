@@ -1,10 +1,14 @@
 ---
 title: "Create Origination"
-api: "POST /v1/originations"
+api: "POST https://api-sandbox.agentispay.co/migrations"
 description: "Submit one person to Bipa. Accepted asynchronously; poll for the outcome."
 ---
 
 Submits and stores an immutable envelope for one person. Bipa answers `201` with the current representation on first acceptance, including an immediate terminal denial when both contacts conflict, and `200` with the existing origination on an identical retry. See [Originations](/originations) for the envelope rules, the lifecycle, and the error codes.
+
+<Info>
+  **Base URL.** Originations are served on their own host: `https://api.agentispay.co` in production and `https://api-sandbox.agentispay.co` in sandbox. That host serves only the `/migrations` paths; the rest of the Partner API stays on `api.bipa.app`.
+</Info>
 
 ## Request
 

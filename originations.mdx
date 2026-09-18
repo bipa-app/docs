@@ -13,10 +13,14 @@ The person becomes a Bipa customer. After the origination reaches a terminal sta
   Originator keys reach only the origination endpoints and the events feed. The rest of the Partner API answers `404` to an originator key.
 </Info>
 
+<Info>
+  **Base URL.** Originations are served on their own host: `https://api.agentispay.co` in production and `https://api-sandbox.agentispay.co` in sandbox. That host serves only the `/migrations` paths; the rest of the Partner API stays on `api.bipa.app`.
+</Info>
+
 ## How it works
 
-1. **Submit.** `POST /v1/originations` with the envelope. Bipa stores it and answers `201` with the current representation; a two-contact conflict is created directly as a terminal denial.
-2. **Poll.** `GET /v1/originations/{id}` returns the state, the stage, the action you should take, and a `user_url` when the person has something to do.
+1. **Submit.** `POST /migrations` with the envelope. Bipa stores it and answers `201` with the current representation; a two-contact conflict is created directly as a terminal denial.
+2. **Poll.** `GET /migrations/{id}` returns the state, the stage, the action you should take, and a `user_url` when the person has something to do.
 3. **Read the terminal state.** `settled`, `denied`, or `expired`. Act on your own books and stop polling.
 
 Bipa never asks you to confirm what you did on your side. Every movement of value happens on Bipa's ledger, from your Bipa account through your originator’s shared escrow account into the person’s account, or back to you. Ledger records attribute each movement to its origination and asset.

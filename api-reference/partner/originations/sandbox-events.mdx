@@ -1,0 +1,96 @@
+---
+title: "Submit Sandbox Event"
+api: "POST https://api-sandbox.agentispay.co/migrations/{id}/sandbox-events"
+description: "Stand in for a customer action or a Bipa decision to drive a migration forward."
+---
+
+Each event plays the part of something that happens outside your system: the customer finishing KYC, an operator approving a review, the deadline passing. Send one when the migration's `action_required` asks for it, then poll [Get Origination](/api-reference/partner/originations/get-origination) to read the result.
+
+<Warning>
+  Sandbox only. Production has no simulator and answers `404` to this path. See [Sandbox migration examples](/api-reference/partner/originations/sandbox-examples) for the four flows and their expected transitions.
+</Warning>
+
+## Path
+
+<ParamField path="id" type="string" required>
+  The `migration_id` returned on submission.
+</ParamField>
+
+## Request
+
+<ParamField body="idempotency_key" type="string" required>
+  Your key for this event. Replaying it with the same body returns the same event; reusing it with a different body is refused with `409 idempotency_key_reused`.
+</ParamField>
+<ParamField body="event" type="string" required>
+  Which action to simulate. An event sent at the wrong stage is refused with `409 simulation_event_not_ready`.
+
+  | Value | Send it when | What it does |
+  |---|---|---|
+  | `complete_customer_kyc` | `awaiting_onboarding`, `document_recapture_required` | The customer finishes Bipa KYC. Recapture keeps the same migration id. |
+  | `activate_customer` | `awaiting_activation` | The customer verifies contact and activates; activation checks run. |
+  | `approve_review` | `manual_review` | An operator approves; the import resumes toward funding and activation. |
+  | `reject_review` | `manual_review` | An operator denies. Terminal, with reserved assets refunded. |
+  | `expire_migration` | any nonterminal stage | The deadline passes. Terminal, with reserved assets refunded. |
+  | `fund_originator` | `awaiting_funding` | Credits sandbox test liquidity. Requires `balances`. |
+  | `unblock_protege` | `protege_blocked` | Clears the Protege block. |
+  | `recover_provider` | after a provider failure | Brings the failed provider back. |
+</ParamField>
+<ParamField body="balances" type="array">
+  Required for `fund_originator`, ignored otherwise. The amounts to credit, each `{ asset, quantity }` with `quantity` a string of digits in the asset's smallest unit. Match the migration's own balances.
+</ParamField>
+
+## Response
+
+`202` while the event is still being applied, `200` once it has finished. Replay the identical event to check whether it completed. While the recovery worker issue described in the examples guide is open, an older event can still report `completed: false` after another action has already settled the migration — read the migration itself to establish its outcome.
+
+<ResponseField name="event_id" type="string">
+  A UUIDv7 for this event.
+</ResponseField>
+<ResponseField name="completed" type="boolean">
+  Whether the simulator has finished applying it.
+</ResponseField>
+<ResponseField name="outcome" type="string">
+  `applied` when the event changed the migration, `not_applicable` when it did not. Null until completed.
+</ResponseField>
+
+<RequestExample>
+```json Approve a review
+{
+  "idempotency_key": "review-1",
+  "event": "approve_review"
+}
+```
+
+```json Fund the originator
+{
+  "idempotency_key": "funding-1",
+  "event": "fund_originator",
+  "balances": [
+    { "asset": "BTC", "quantity": "1000000" },
+    { "asset": "USDT", "quantity": "1000000" }
+  ]
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json 202 Accepted
+{
+  "event_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd23",
+  "completed": false,
+  "outcome": null
+}
+```
+
+```json 200 OK
+{
+  "event_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd23",
+  "completed": true,
+  "outcome": "applied"
+}
+```
+
+```json 409 Conflict
+{ "code": "simulation_event_not_ready" }
+```
+</ResponseExample>

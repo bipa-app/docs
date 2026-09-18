@@ -1,0 +1,122 @@
+---
+title: "Get Sandbox Fixture"
+api: "GET https://api-sandbox.agentispay.co/migrations/sandbox-fixture"
+description: "A fresh synthetic identity and signed document URLs for one simulation scenario."
+---
+
+Returns a complete, ready-to-submit envelope for the scenario you name. The identity is synthetic and the document URLs are signed and short-lived, so nothing here touches a real person. Each call returns a new `external_id` and a new CPF; submit the envelope to [Create Origination](/api-reference/partner/originations/create-origination) to start that scenario.
+
+<Warning>
+  Sandbox only. Production has no simulator and answers `404` to this path. See [Sandbox migration examples](/api-reference/partner/originations/sandbox-examples) for the four flows these fixtures drive.
+</Warning>
+
+## Query
+
+<ParamField query="scenario" type="string" required>
+  Which outcome the simulated providers should produce.
+
+  | Value | What it produces |
+  |---|---|
+  | `approved` | Every check passes; the migration runs through to settlement. |
+  | `import_rejected` | Import checks return explicit fraud evidence; terminal denial. |
+  | `import_manual_review` | Import checks land in `manual_review`, awaiting `approve_review` or `reject_review`. |
+  | `document_recapture` | The front document is unreadable; `document_recapture_required`, recoverable on the same migration. |
+  | `activation_rejected` | Import passes, activation checks deny; reserved assets are refunded. |
+  | `activation_manual_review` | Activation checks land in `manual_review` after `activate_customer`. |
+  | `protege_blocked` | The person is blocked by Protege; clear it with `unblock_protege`. |
+  | `provider_unavailable` | A provider fails; recover with `recover_provider`. |
+  | `insufficient_funding` | Holds the migration at `awaiting_funding` until `fund_originator`. |
+</ParamField>
+
+## Response
+
+The complete envelope, shaped exactly as Create Origination expects it. Send it as-is, or override individual fields.
+
+<ResponseField name="external_id" type="string">
+  A new `simulation-<uuid>` for every call.
+</ResponseField>
+<ResponseField name="tax_id" type="object">
+  A synthetic CPF. Never a real person's.
+</ResponseField>
+<ResponseField name="email" type="string">
+  A synthetic address that routes nowhere.
+</ResponseField>
+<ResponseField name="phone" type="string">
+  A synthetic E.164 phone.
+</ResponseField>
+<ResponseField name="consents" type="object">
+  Both proofs, pre-filled and already accepted.
+</ResponseField>
+<ResponseField name="kyc" type="object">
+  Always `level: "full"`, with signed `selfie_file_url` and both `document_files`. The `document_recapture` scenario serves an unreadable front document. Drop the whole object and send `{ "level": "basic" }` to test basic KYC.
+</ResponseField>
+<ResponseField name="address" type="object">
+  Postal code `01310100`, which the simulator's address step recognises.
+</ResponseField>
+<ResponseField name="balances" type="array">
+  A sample portfolio. Replace it with the assets you want to test.
+</ResponseField>
+<ResponseField name="sandbox" type="object">
+  `scenario`, `monthly_income_cents` and `document_type`. The default income selects the Max test plan, which currently has no monthly term and blocks completion; override it to `"1200000"` for the Pro plan.
+</ResponseField>
+
+<ResponseExample>
+```json 200 OK
+{
+  "external_id": "simulation-0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
+  "tax_id": { "type": "cpf", "value": "64780788099" },
+  "email": "sandbox-0199a4be@example.invalid",
+  "phone": "+5531999998888",
+  "consents": {
+    "data_sharing": {
+      "accepted_at": "2026-09-17T14:03:22Z",
+      "ip": "192.0.2.1",
+      "user_agent": "Partner sandbox fixture",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "locale": "pt-BR"
+    },
+    "terms_of_service": {
+      "accepted_at": "2026-09-17T14:03:22Z",
+      "ip": "192.0.2.1",
+      "user_agent": "Partner sandbox fixture",
+      "document_version": "sandbox-v1",
+      "document_digest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "locale": "pt-BR"
+    }
+  },
+  "kyc": {
+    "level": "full",
+    "selfie_file_url": "https://storage.example/partner-simulations/fixtures/selfie.jpg?sig=...",
+    "document_files": [
+      { "side": "front", "file_url": "https://storage.example/partner-simulations/fixtures/front.jpg?sig=..." },
+      { "side": "back", "file_url": "https://storage.example/partner-simulations/fixtures/back.jpg?sig=..." }
+    ]
+  },
+  "address": {
+    "zip_code": "01310100",
+    "street": "Avenida Paulista",
+    "number": "1000",
+    "complement": "Sandbox",
+    "district": "Bela Vista",
+    "city": "Sao Paulo",
+    "state": "SP",
+    "country": "BR"
+  },
+  "balances": [
+    { "asset": "BRL", "quantity": "12345" },
+    { "asset": "BTC", "quantity": "54321" },
+    { "asset": "ETH", "quantity": "18446744073709551616" }
+  ],
+  "sandbox": {
+    "scenario": "approved",
+    "monthly_income_cents": "2000000",
+    "document_type": "cnh"
+  }
+}
+```
+
+```json 400 Bad Request
+{ "code": "malformed_payload" }
+```
+</ResponseExample>
