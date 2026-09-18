@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guia Ponte Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink: #10232E;
+    --paper: #F7F9FA;
+    --surface: #FFFFFF;
+    --surface-sunk: #EEF2F4;
+    --line: #DCE4E8;
+    --line-soft: #E8EEF1;
+    --text: #172B36;
+    --muted: #5A6B75;
+    --accent: #1E6FD9;
+    --accent-soft: #E7F0FC;
+    --teal: #0E8C7F;
+    --teal-soft: #E2F3F0;
+    --ok: #1B7A46;
+    --ok-soft: #E3F4EA;
+    --warn: #96611A;
+    --warn-soft: #FBF0DC;
+    --danger: #B23030;
+    --danger-soft: #FBE7E7;
+    --code-bg: #10232E;
+    --code-text: #DCE7EC;
+    --code-line: #1E3846;
+    --shadow: 0 1px 2px rgba(16, 35, 46, .06), 0 8px 24px -16px rgba(16, 35, 46, .28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #07131A;
+      --paper: #0D1B22;
+      --surface: #14252E;
+      --surface-sunk: #102028;
+      --line: #233A45;
+      --line-soft: #1C303A;
+      --text: #DEE9EE;
+      --muted: #91A5AF;
+      --accent: #74AAF2;
+      --accent-soft: #14293F;
+      --teal: #45C2B1;
+      --teal-soft: #0F2E2C;
+      --ok: #5CC384;
+      --ok-soft: #102A1C;
+      --warn: #D7A24F;
+      --warn-soft: #2A2110;
+      --danger: #E98080;
+      --danger-soft: #2E1616;
+      --code-bg: #07131A;
+      --code-text: #CFDEE5;
+      --code-line: #1B3340;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 28px -18px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #07131A;
+    --paper: #0D1B22;
+    --surface: #14252E;
+    --surface-sunk: #102028;
+    --line: #233A45;
+    --line-soft: #1C303A;
+    --text: #DEE9EE;
+    --muted: #91A5AF;
+    --accent: #74AAF2;
+    --accent-soft: #14293F;
+    --teal: #45C2B1;
+    --teal-soft: #0F2E2C;
+    --ok: #5CC384;
+    --ok-soft: #102A1C;
+    --warn: #D7A24F;
+    --warn-soft: #2A2110;
+    --danger: #E98080;
+    --danger-soft: #2E1616;
+    --code-bg: #07131A;
+    --code-text: #CFDEE5;
+    --code-line: #1B3340;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 28px -18px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--text);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .masthead {
+    background: var(--ink);
+    color: #DCE7EC;
+    border-bottom: 1px solid var(--code-line);
+  }
+
+  .masthead-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-block: 40px 36px;
+    padding-inline: 20px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: #6FB6AC;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 5.4vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -.02em;
+    margin: 0;
+    color: #FFFFFF;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+
+  .lede {
+    margin: 16px 0 0;
+    font-size: 17px;
+    line-height: 1.6;
+    color: #A9BDC6;
+    max-width: 62ch;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid var(--code-line);
+  }
+
+  .fact { display: flex; flex-direction: column; gap: 3px; }
+
+  .fact dt {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #6B8794;
+  }
+
+  .fact dd {
+    margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13.5px;
+    color: #DCE7EC;
+    word-break: break-all;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-block: 0 72px;
+    padding-inline: 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 208px minmax(0, 1fr); gap: 56px; align-items: start; }
+  }
+
+  .rail { display: none; }
+
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: calc(env(safe-area-inset-top, 0px) + 32px);
+      padding-top: 44px;
+    }
+    .rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+    .rail a {
+      display: block;
+      padding: 5px 10px;
+      border-left: 2px solid var(--line);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .rail a:hover { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); }
+    .rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  }
+
+  main { min-width: 0; max-width: 780px; }
+
+  section { padding-top: 44px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 25px;
+    letter-spacing: -.015em;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -.008em;
+    margin: 28px 0 6px;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  p { margin: 0 0 14px; max-width: 68ch; }
+  main > section > p:last-child { margin-bottom: 0; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .875em;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: .08em .34em;
+    word-break: break-word;
+  }
+
+  .codeblock { position: relative; margin: 18px 0 20px; }
+
+  .codeblock pre {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 8px;
+    padding: 18px 18px 18px 18px;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.62;
+    tab-size: 2;
+  }
+
+  .codeblock pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    word-break: normal;
+  }
+
+  .codeblock-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--code-line);
+    color: #9FBAC6;
+    border-radius: 8px 8px 0 0;
+    padding: 7px 12px 7px 14px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .codeblock-head + pre { border-radius: 0 0 8px 8px; }
+
+  .copy {
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    background: transparent;
+    color: #9FBAC6;
+    border: 1px solid #33505F;
+    border-radius: 5px;
+    padding: 2px 9px;
+    cursor: pointer;
+    flex: none;
+  }
+  .copy:hover { color: #FFFFFF; border-color: #5A7C8D; }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy[data-done="1"] { color: #6FD3A8; border-color: #2E6B4E; }
+
+  .steps { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; gap: 26px; }
+
+  .step { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; align-items: start; }
+
+  .step-n {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+    background: var(--teal-soft);
+    border-radius: 6px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+  }
+
+  .step h3 { margin-top: 0; }
+  .step > div { min-width: 0; }
+
+  .tablewrap { overflow-x: auto; margin: 18px 0 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+
+  thead th {
+    background: var(--surface-sunk);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+
+  .num { font-variant-numeric: tabular-nums; }
+
+  .pill {
+    display: inline-block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    border-radius: 4px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+  .pill-ok { background: var(--ok-soft); color: var(--ok); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-danger { background: var(--danger-soft); color: var(--danger); }
+  .pill-accent { background: var(--accent-soft); color: var(--accent); }
+
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    box-shadow: var(--shadow);
+  }
+  .note.warn { border-left-color: var(--warn); }
+  .note p { margin: 0; max-width: 64ch; }
+  .note p + p { margin-top: 10px; }
+
+  .note-title {
+    font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    margin: 0 0 4px;
+  }
+
+  ul.plain { margin: 0 0 14px; padding-left: 20px; max-width: 68ch; }
+  ul.plain li { margin-bottom: 7px; }
+
+  .limits { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+
+  .limit {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 15px 17px;
+  }
+
+  .limit h3 { margin: 0 0 3px; font-size: 15.5px; }
+  .limit p { margin: 0; font-size: 14.5px; color: var(--muted); max-width: 62ch; }
+  .limit > div { min-width: 0; }
+
+  .links { display: flex; flex-direction: column; gap: 0; margin-top: 18px; border-top: 1px solid var(--line); }
+
+  .linkrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--text);
+  }
+  .linkrow:hover .linkrow-t { color: var(--accent); text-decoration: underline; }
+  .linkrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .linkrow-t { font-weight: 600; font-size: 15px; }
+  .linkrow-d { color: var(--muted); font-size: 14px; }
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-block: 0 56px;
+    padding-inline: 20px;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  footer .rule { border-top: 1px solid var(--line); padding-top: 18px; max-width: 68ch; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="eyebrow">Projeto Ponte &middot; Ambiente de testes</p>
+    <h1>Simulando migrações no ambiente de testes</h1>
+    <p class="lede">
+      O ambiente de testes roda com provedores simulados. Isso quer dizer que vocês conseguem
+      levar uma migração até o fim &mdash; ou até uma recusa, uma revisão manual ou um pedido de
+      novo documento &mdash; sem depender de provedor externo e sem tocar em dado de pessoa real.
+    </p>
+    <dl class="facts">
+      <div class="fact">
+        <dt>Host do sandbox</dt>
+        <dd>api-sandbox.agentispay.co</dd>
+      </div>
+      <div class="fact">
+        <dt>Autenticação</dt>
+        <dd>X-API-Key: ponte_test_&hellip;</dd>
+      </div>
+      <div class="fact">
+        <dt>Ativos aceitos</dt>
+        <dd>BTC USDT ETH SOL USDC XRP</dd>
+      </div>
+    </dl>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Seções">
+    <ol>
+      <li><a href="#mudou">O que mudou</a></li>
+      <li><a href="#comecar">Antes de começar</a></li>
+      <li><a href="#fluxo">O fluxo em 4 passos</a></li>
+      <li><a href="#cenarios">Cenários</a></li>
+      <li><a href="#eventos">Eventos</a></li>
+      <li><a href="#testes">Os quatro testes</a></li>
+      <li><a href="#respostas">Respostas e conflitos</a></li>
+      <li><a href="#limites">Limitações de hoje</a></li>
+      <li><a href="#ler">Dúvidas</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="mudou">
+      <h2>O que mudou</h2>
+      <p>
+        O campo <code>balances</code> ficou mais simples. Cada posição agora tem só
+        <code>asset</code> e <code>quantity</code>. Os campos <code>network</code>,
+        <code>contract</code> e <code>decimal_scale</code> saíram: a plataforma já sabe em qual
+        rede cada ativo vive e com quantas casas ele é contado, então não faz sentido pedir
+        isso de vocês. Mandar qualquer um deles agora devolve
+        <span class="pill pill-danger">400 malformed_payload</span>.
+      </p>
+      <p>
+        A quantidade continua sendo uma <strong>string de dígitos na menor unidade do ativo</strong>.
+        A escala é fixa por ativo:
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Ativo</th><th>Casas</th><th>Exemplo</th><th>Equivale a</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>BTC</code></td><td class="num">8</td><td><code>"116516515"</code></td><td class="num">1,16516515 BTC</td></tr>
+            <tr><td><code>ETH</code></td><td class="num">18</td><td><code>"1000000000000000000"</code></td><td class="num">1 ETH</td></tr>
+            <tr><td><code>SOL</code></td><td class="num">9</td><td><code>"1000000000"</code></td><td class="num">1 SOL</td></tr>
+            <tr><td><code>USDT</code></td><td class="num">6</td><td><code>"8974655"</code></td><td class="num">8,974655 USDT</td></tr>
+            <tr><td><code>USDC</code></td><td class="num">6</td><td><code>"1000000"</code></td><td class="num">1 USDC</td></tr>
+            <tr><td><code>XRP</code></td><td class="num">6</td><td><code>"1000000"</code></td><td class="num">1 XRP</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>XRP entrou agora.</strong> BNB ainda não está liberado &mdash; mandar BNB devolve
+        <span class="pill pill-warn">422 unsupported_asset</span>.
+      </p>
+    </section>
+
+    <section id="comecar">
+      <h2>Antes de começar</h2>
+      <p>
+        Vocês precisam de uma chave de sandbox. Ela começa com <code>ponte_test_</code> e vai no
+        header <code>X-API-Key</code> em toda requisição. A mesma chave serve para criar migrações,
+        consultar e disparar os eventos de simulação.
+      </p>
+      <p>
+        O caminho público do Projeto Ponte é <code>/migrations</code>, no host
+        <code>api-sandbox.agentispay.co</code>. Os exemplos abaixo pedem <code>curl</code> e
+        <code>jq</code>.
+      </p>
+      <div class="note">
+        <p class="note-title">Um teste rápido de que a chave funciona</p>
+        <p>
+          Se vier <span class="pill pill-ok">200</span> com um envelope JSON, está tudo certo.
+          <span class="pill pill-danger">401</span> quer dizer chave inválida ou ausente.
+        </p>
+      </div>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>shell</span><button class="copy" type="button">Copiar</button></div>
+        <pre><code>curl --silent --show-error --fail-with-body \
+  'https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved' \
+  --header 'X-API-Key: SUA_CHAVE_DE_SANDBOX' | jq .</code></pre>
+      </div>
+    </section>
+
+    <section id="fluxo">
+      <h2>O fluxo em 4 passos</h2>
+      <p>
+        Todo teste segue a mesma sequência. Vale a pena entender ela uma vez; depois é só trocar
+        o cenário.
+      </p>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n" aria-hidden="true">1</span>
+          <div>
+            <h3>Pegue um fixture</h3>
+            <p>
+              <code>GET /migrations/sandbox-fixture?scenario=&hellip;</code> devolve um envelope
+              completo e pronto para enviar: identidade sintética nova, CPF sintético, URLs de
+              documento assinadas e o bloco <code>sandbox</code> já preenchido. Cada chamada gera
+              um <code>external_id</code> e um CPF novos, então dá para repetir o teste à vontade.
+            </p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">2</span>
+          <div>
+            <h3>Crie a migração</h3>
+            <p>
+              <code>POST /migrations</code> com esse envelope. A resposta é
+              <span class="pill pill-ok">201</span> com o <code>migration_id</code> &mdash; é ele
+              que vocês guardam. Reenviar exatamente o mesmo corpo devolve
+              <span class="pill pill-ok">200</span> e a mesma migração, não cria outra.
+            </p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">3</span>
+          <div>
+            <h3>Acompanhe</h3>
+            <p>
+              <code>GET /migrations/{id}</code> a cada 5&ndash;15 segundos. Leiam
+              <code>state</code>, <code>stage</code> e <code>action_required</code> juntos:
+              <code>action_required</code> é o que diz o que fazer agora. Estado terminal sempre
+              vem com <code>stage: "terminal"</code>.
+            </p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n" aria-hidden="true">4</span>
+          <div>
+            <h3>Empurre com um evento</h3>
+            <p>
+              Quando a migração espera algo que acontece fora do sistema de vocês &mdash; o cliente
+              concluindo o KYC, um analista aprovando uma revisão, o prazo vencendo &mdash;
+              <code>POST /migrations/{id}/sandbox-events</code> faz esse papel. Cada evento leva
+              uma <code>idempotency_key</code> de vocês.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="cenarios">
+      <h2>Cenários</h2>
+      <p>
+        O cenário é escolhido no fixture e define como os provedores simulados vão responder.
+        Ele viaja dentro do envelope, no bloco <code>sandbox</code>.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th><code>scenario</code></th><th>O que acontece</th><th>Como termina</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>approved</code></td>
+              <td>Tudo passa.</td>
+              <td>Segue até <code>settled</code>.</td>
+            </tr>
+            <tr>
+              <td><code>import_rejected</code></td>
+              <td>As checagens de entrada acham indício claro de fraude.</td>
+              <td><span class="pill pill-danger">denied</span></td>
+            </tr>
+            <tr>
+              <td><code>import_manual_review</code></td>
+              <td>As checagens de entrada param em revisão.</td>
+              <td><code>manual_review</code>, esperando decisão</td>
+            </tr>
+            <tr>
+              <td><code>document_recapture</code></td>
+              <td>A frente do documento vem ilegível.</td>
+              <td><code>document_recapture_required</code>, recuperável na <strong>mesma</strong> migração</td>
+            </tr>
+            <tr>
+              <td><code>provider_unavailable</code></td>
+              <td>Um provedor fica fora do ar e a checagem esgota as tentativas.</td>
+              <td><code>manual_review</code> com a flag <code>retry_exhausted</code></td>
+            </tr>
+            <tr>
+              <td><code>insufficient_funding</code></td>
+              <td>Segura em <code>awaiting_funding</code>.</td>
+              <td>Destrava com <code>fund_originator</code></td>
+            </tr>
+            <tr>
+              <td><code>activation_manual_review</code></td>
+              <td>A entrada passa; a ativação para em revisão.</td>
+              <td><code>manual_review</code> depois de <code>activate_customer</code></td>
+            </tr>
+            <tr>
+              <td><code>activation_rejected</code></td>
+              <td>A entrada passa; a ativação recusa.</td>
+              <td><span class="pill pill-danger">denied</span>, com os ativos reservados devolvidos</td>
+            </tr>
+            <tr>
+              <td><code>protege_blocked</code></td>
+              <td>A pessoa aparece bloqueada no Protege.</td>
+              <td>Destrava com <code>unblock_protege</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <p class="note-title">Uma troca que vale fazer sempre</p>
+        <p>
+          O fixture vem com <code>monthly_income_cents: "2000000"</code>, que cai no plano Max.
+          O Max ainda não tem mensalidade no catálogo de sandbox e trava a conclusão. Troquem para
+          <code>"1200000"</code> (plano Pro) e o fluxo completa.
+        </p>
+      </div>
+    </section>
+
+    <section id="eventos">
+      <h2>Eventos</h2>
+      <p>
+        Um evento só é aceito no estágio a que ele pertence. Fora dele a resposta é
+        <span class="pill pill-warn">409 simulation_event_not_ready</span> &mdash; o que costuma
+        significar que a migração ainda não chegou lá, não que o corpo esteja errado.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Evento</th><th>Mande quando o estágio for</th><th>O que ele representa</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>complete_customer_kyc</code></td>
+              <td><code>awaiting_onboarding</code><br><code>document_recapture_required</code></td>
+              <td>O cliente concluiu o KYC na plataforma. Na recaptura, o <code>migration_id</code> é o mesmo.</td>
+            </tr>
+            <tr>
+              <td><code>activate_customer</code></td>
+              <td><code>awaiting_activation</code></td>
+              <td>O cliente confirmou contato e ativou a conta.</td>
+            </tr>
+            <tr>
+              <td><code>approve_review</code></td>
+              <td><code>manual_review</code></td>
+              <td>Um analista aprovou. A migração volta a andar.</td>
+            </tr>
+            <tr>
+              <td><code>reject_review</code></td>
+              <td><code>manual_review</code></td>
+              <td>Um analista recusou. Terminal, com estorno das reservas.</td>
+            </tr>
+            <tr>
+              <td><code>expire_migration</code></td>
+              <td>qualquer estágio não terminal</td>
+              <td>O prazo venceu. Terminal, com estorno das reservas.</td>
+            </tr>
+            <tr>
+              <td><code>fund_originator</code></td>
+              <td><code>awaiting_funding</code></td>
+              <td>Credita liquidez de teste. Exige <code>balances</code>.</td>
+            </tr>
+            <tr>
+              <td><code>unblock_protege</code></td>
+              <td><code>awaiting_activation</code></td>
+              <td>Libera o bloqueio do Protege.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Como ler a resposta</h3>
+      <p>
+        <span class="pill pill-accent">202</span> quer dizer que o evento foi aceito e ainda está
+        sendo aplicado. <span class="pill pill-ok">200</span> quer dizer que terminou, e aí
+        <code>outcome</code> vem como <code>applied</code> (mudou a migração) ou
+        <code>not_applicable</code> (não mudou). Para saber onde a migração está de fato, consultem
+        a migração &mdash; não fiquem criando chaves novas para forçar o avanço.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>shell</span><button class="copy" type="button">Copiar</button></div>
+        <pre><code>curl --silent --show-error --fail-with-body --include \
+  'https://api-sandbox.agentispay.co/migrations/MIGRATION_ID/sandbox-events' \
+  --header 'X-API-Key: SUA_CHAVE_DE_SANDBOX' \
+  --header 'Content-Type: application/json' \
+  --data '{"idempotency_key":"review-1","event":"approve_review"}'</code></pre>
+      </div>
+      <p>
+        Repetir a mesma <code>idempotency_key</code> com o mesmo corpo devolve o mesmo evento.
+        Repetir com corpo diferente devolve
+        <span class="pill pill-warn">409 idempotency_key_reused</span>.
+      </p>
+    </section>
+
+    <section id="testes">
+      <h2>Os quatro testes</h2>
+      <p>
+        Este é o comando completo, de ponta a ponta. Troquem só a chave. Ele imprime o envelope
+        antes de enviar e salva pedido e resposta em disco, para vocês conseguirem reenviar
+        exatamente o mesmo corpo depois.
+      </p>
+      <div class="codeblock">
+        <div class="codeblock-head"><span>Teste 1 &middot; KYC completo, aprovado</span><button class="copy" type="button">Copiar</button></div>
+        <pre><code>bash -c '
+set -euo pipefail
+API_KEY="SUA_CHAVE_DE_SANDBOX"
+HOST="https://api-sandbox.agentispay.co"
+SCENARIO="approved"
+
+FIXTURE=$(curl --silent --show-error --fail-with-body \
+  "$HOST/migrations/sandbox-fixture?scenario=$SCENARIO" \
+  --header "X-API-Key: $API_KEY")
+
+printf "%s" "$FIXTURE" \
+  | jq ".sandbox.monthly_income_cents = \"1200000\"
+        | .balances = [
+            {\"asset\":\"BTC\",\"quantity\":\"116516515\"},
+            {\"asset\":\"USDT\",\"quantity\":\"8974655\"},
+            {\"asset\":\"ETH\",\"quantity\":\"1000000000000000000\"},
+            {\"asset\":\"SOL\",\"quantity\":\"1000000000\"},
+            {\"asset\":\"USDC\",\"quantity\":\"1000000\"},
+            {\"asset\":\"XRP\",\"quantity\":\"1000000\"}
+          ]" \
+  | tee pedido.json
+
+curl --silent --show-error --fail-with-body \
+  --output resposta.json --write-out "HTTP %{http_code}\n" \
+  "$HOST/migrations" \
+  --header "X-API-Key: $API_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @pedido.json
+
+jq . resposta.json
+'</code></pre>
+      </div>
+      <p>
+        Guardem o <code>migration_id</code> da resposta. Os outros três testes são o mesmo comando
+        com outro <code>SCENARIO</code> &mdash; muda só o que vocês mandam depois:
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Teste</th><th><code>SCENARIO</code></th><th>Onde para</th><th>O que mandar em seguida</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1.</strong> KYC completo</td>
+              <td><code>approved</code></td>
+              <td><code>awaiting_onboarding</code></td>
+              <td><code>complete_customer_kyc</code>, depois <code>activate_customer</code></td>
+            </tr>
+            <tr>
+              <td><strong>2.</strong> KYC básico</td>
+              <td><code>approved</code><br><span class="linkrow-d">com <code>"kyc": {"level": "basic"}</code></span></td>
+              <td><code>awaiting_onboarding</code></td>
+              <td><code>complete_customer_kyc</code></td>
+            </tr>
+            <tr>
+              <td><strong>3.</strong> Documento ilegível</td>
+              <td><code>document_recapture</code></td>
+              <td><code>document_recapture_required</code></td>
+              <td><code>complete_customer_kyc</code> &mdash; mesma migração, não criem outra</td>
+            </tr>
+            <tr>
+              <td><strong>4.</strong> Revisão manual</td>
+              <td><code>import_manual_review</code></td>
+              <td><code>manual_review</code></td>
+              <td><code>approve_review</code>, <code>reject_review</code> ou <code>expire_migration</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Para o teste 2, troquem o bloco de KYC por <code>{"level": "basic"}</code> e removam
+        <code>selfie_file_url</code> e <code>document_files</code>. O nível aceito se chama
+        <code>basic</code>, não <code>partial</code>.
+      </p>
+    </section>
+
+    <section id="respostas">
+      <h2>Respostas e conflitos</h2>
+      <p>
+        Vale a pena exercitar cada um destes, porque é o que vocês vão encontrar em produção.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Situação</th><th>Resposta</th><th>O que fazer</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Envelope aceito</td>
+              <td><span class="pill pill-ok">201</span></td>
+              <td>Guardar o <code>migration_id</code> e começar o polling.</td>
+            </tr>
+            <tr>
+              <td>Mesmo corpo reenviado</td>
+              <td><span class="pill pill-ok">200</span></td>
+              <td>Nada. É a mesma migração, não uma nova.</td>
+            </tr>
+            <tr>
+              <td>Mesmo <code>external_id</code>, corpo diferente</td>
+              <td><span class="pill pill-warn">409</span> <code>external_id_reused</code></td>
+              <td>O envelope é imutável. Usar um <code>external_id</code> novo.</td>
+            </tr>
+            <tr>
+              <td>A pessoa já tem migração ativa</td>
+              <td><span class="pill pill-warn">409</span> <code>migration_already_active</code></td>
+              <td>A resposta traz o <code>migration_id</code> quando a migração é de vocês. Acompanhem aquela, não criem outra.</td>
+            </tr>
+            <tr>
+              <td>Campo removido ou corpo inválido</td>
+              <td><span class="pill pill-danger">400</span> <code>malformed_payload</code></td>
+              <td>Conferir se sobrou <code>network</code>, <code>contract</code> ou <code>decimal_scale</code>.</td>
+            </tr>
+            <tr>
+              <td>Ativo fora da lista</td>
+              <td><span class="pill pill-warn">422</span> <code>unsupported_asset</code></td>
+              <td>Só BTC, USDT, ETH, SOL, USDC e XRP por enquanto.</td>
+            </tr>
+            <tr>
+              <td>CNPJ no <code>tax_id</code></td>
+              <td><span class="pill pill-warn">422</span> <code>pj_not_supported</code></td>
+              <td>Pessoa jurídica ainda não entra por aqui.</td>
+            </tr>
+            <tr>
+              <td>Plataforma indisponível</td>
+              <td><span class="pill pill-danger">503</span> <code>temporarily_unavailable</code></td>
+              <td>Repetir depois; a resposta traz <code>Retry-After</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Nenhuma requisição recusada cria migração. Dá para mandar corpo inválido à vontade sem
+        sujar o ambiente.
+      </p>
+    </section>
+
+    <section id="limites">
+      <h2>Limitações de hoje</h2>
+      <p>
+        São três pontos conhecidos do sandbox neste momento. Nenhum impede os testes, mas todos
+        mudam o que esperar &mdash; e todos já estão em correção.
+      </p>
+      <div class="limits">
+        <div class="limit">
+          <span class="pill pill-warn">1</span>
+          <div>
+            <h3>O avanço automático pode travar</h3>
+            <p>
+              Uma migração pode ficar parada em um estágio mesmo com tudo certo. Se isso acontecer,
+              reenviem o evento correspondente &mdash; a idempotência garante que não duplica.
+              A correção já está pronta e entra na próxima subida do sandbox.
+            </p>
+          </div>
+        </div>
+        <div class="limit">
+          <span class="pill pill-warn">2</span>
+          <div>
+            <h3>O <code>user_url</code> ainda não abre</h3>
+            <p>
+              Quando a migração pede uma ação do cliente, a resposta traz um <code>user_url</code>.
+              Hoje esse link devolve 404. O campo e o formato já são os definitivos, então dá para
+              integrar contra ele; no sandbox, o evento <code>complete_customer_kyc</code> faz o
+              papel do cliente.
+            </p>
+          </div>
+        </div>
+        <div class="limit">
+          <span class="pill pill-warn">3</span>
+          <div>
+            <h3><code>provider_unavailable</code> vira revisão, não espera</h3>
+            <p>
+              A checagem esgota as tentativas em menos de um segundo e a migração cai em
+              <code>manual_review</code> com a flag <code>retry_exhausted</code>. Esse é o
+              comportamento a testar: um provedor fora do ar vira revisão, não recusa. Resolvam com
+              <code>approve_review</code> ou <code>reject_review</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ler">
+      <h2>Dúvidas</h2>
+      <p>
+        Este guia cobre o ambiente de testes de ponta a ponta. Se alguma resposta não bater com o
+        que está aqui, ou se uma migração parar em um estágio que você não esperava, fale com seu
+        ponto de contato técnico levando o <code>migration_id</code> e o horário aproximado.
+      </p>
+      <p>
+        A referência completa do payload, campo a campo, está disponível sob solicitação junto com
+        as credenciais de sandbox.
+      </p>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="rule">
+    Dúvida, comportamento estranho ou resposta que não bate com este guia: mandem o
+    <code>migration_id</code> e o horário aproximado para o seu ponto de contato técnico.
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll(".copy").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var block = button.closest(".codeblock");
+      var code = block && block.querySelector("code");
+      if (!code) return;
+      var done = function () {
+        button.textContent = "Copiado";
+        button.dataset.done = "1";
+        setTimeout(function () {
+          button.textContent = "Copiar";
+          delete button.dataset.done;
+        }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(code.textContent).then(done, function () {
+          button.textContent = "Selecione e copie";
+        });
+      } catch (e) {
+        button.textContent = "Selecione e copie";
+      }
+    });
+  });
+</script>
+
+</head>
+</html>
