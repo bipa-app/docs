@@ -13,7 +13,7 @@ The first request obtains a fresh synthetic identity and signed document URLs. T
 
 Quantities are integer strings in base units: BTC 8 decimals, USDT/USDC/XRP 6, ETH 18 and SOL 9. Send only `asset` and `quantity` in balances. Omit `network`, `contract` and `decimal_scale`.
 
-Before testing, Bipa must configure the originator import policy, full-KYC activation policy and the current costs of their checks. Simulated provider calls use test data; funding events create sandbox liquidity. Policies and liquidity belong to the test account, so another account can have different readiness. The examples set simulated monthly income to `"1200000"` (R$12,000), which uses the Pro test plan. The fixture default selects Max, whose current sandbox catalog has no monthly term and blocks completion. Normal KYC also needs the simulator postal code `01310100` in Bipa’s address reference data.
+Before testing, Bipa must configure the originator import policy, full-KYC activation policy and the current costs of their checks. Simulated provider calls use test data; funding events create sandbox liquidity. Policies and liquidity belong to the test account, so another account can have different readiness. Normal KYC also needs the simulator postal code `01310100` in Bipa’s address reference data.
 
 ## 1. Basic KYC
 
@@ -56,7 +56,7 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
 JSON
 )
@@ -124,7 +124,7 @@ REQUEST=$(cat <<JSON
     {"asset": "USDC", "quantity": "1000000"},
     {"asset": "XRP", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
 JSON
 )
@@ -188,7 +188,7 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
 JSON
 )
@@ -252,7 +252,7 @@ REQUEST=$(cat <<JSON
     {"asset": "BTC", "quantity": "1000000"},
     {"asset": "USDT", "quantity": "1000000"}
   ],
-  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
+  "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
 JSON
 )
