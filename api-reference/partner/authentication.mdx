@@ -21,6 +21,25 @@ curl https://api.bipa.app/v1/events \
   -H "Content-Type: application/json"
 ```
 
+## Verify your key
+
+`GET /v1/me` returns the partner the key belongs to. It takes no parameters: the key is the identity, so a key can only ever read its own partner.
+
+```bash
+curl https://api.bipa.app/v1/me \
+  -H "X-API-Key: your_partner_api_key"
+```
+
+```json
+{
+  "partner_id": 89,
+  "name": "Acme",
+  "kind": "originator"
+}
+```
+
+`kind` is `controller` or `originator`. Projeto Ponte partners reach the same endpoint at `https://api.agentispay.co/me` (sandbox: `https://api-sandbox.agentispay.co/me`).
+
 ## Obtaining API keys
 
 Partner API keys are provisioned by Bipa during the partner onboarding process. Contact your Bipa representative to obtain your API key.

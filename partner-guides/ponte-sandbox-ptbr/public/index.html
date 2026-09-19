@@ -524,14 +524,16 @@
       <div class="note">
         <p class="note-title">Um teste rápido de que a chave funciona</p>
         <p>
-          Se vier <span class="pill pill-ok">200</span> com um envelope JSON, está tudo certo.
+          <code>GET /me</code> devolve o parceiro dono da chave. Se vier
+          <span class="pill pill-ok">200</span> com <code>partner_id</code>, <code>name</code> e
+          <code>kind: "originator"</code>, a chave é a de vocês.
           <span class="pill pill-danger">401</span> quer dizer chave inválida ou ausente.
         </p>
       </div>
       <div class="codeblock">
         <div class="codeblock-head"><span>shell</span><button class="copy" type="button">Copiar</button></div>
         <pre><code>curl --silent --show-error --fail-with-body \
-  'https://api-sandbox.agentispay.co/migrations/sandbox-fixture?scenario=approved' \
+  'https://api-sandbox.agentispay.co/me' \
   --header 'X-API-Key: SUA_CHAVE_DE_SANDBOX' | jq .</code></pre>
       </div>
     </section>
