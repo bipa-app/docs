@@ -1,0 +1,31 @@
+---
+title: "Business transactions and CSV"
+description: "List exact ledger entries and export a reconciled account statement."
+---
+
+`GET /v1/transactions` lists entries from the authenticated partner's business checking account. `GET /v1/transactions.csv` exports the same interval. Both need an active `financial:read` grant and treasury access for the organization. No partner or organization ID is accepted in the request.
+
+Provide `asset` (`BRL`, `BTC`, `USDT`, `USDC`, `ETH`, `SOL`, or `XRP`), `start_unix_seconds`, and `end_unix_seconds`. The UTC interval is half-open and can span at most 366 days. The JSON endpoint accepts an optional signed `cursor` from `next_cursor`; the CSV endpoint does not accept a cursor.
+
+```bash
+curl -G https://api.bipa.app/v1/transactions \
+  -H "X-API-Key: $BIPA_PARTNER_API_KEY" \
+  --data-urlencode "asset=USDT" \
+  --data-urlencode "start_unix_seconds=1780000000" \
+  --data-urlencode "end_unix_seconds=1780086400"
+```
+
+The response contains `opening_balance`, `closing_balance`, `entries`, and `next_cursor`. Each entry has `ledger_entry_id`, `change`, `balance`, `booked_at_unix_seconds`, and `has_liquid_trade`. Amounts use signed integer `min_units` strings with `decimal_scale`. To paginate, repeat the same asset and interval and pass `next_cursor` as `cursor` until it is `null`. A cursor is bound to the key, partner, asset, and interval.
+
+```bash
+curl -G https://api.bipa.app/v1/transactions.csv \
+  -H "X-API-Key: $BIPA_PARTNER_API_KEY" \
+  --data-urlencode "asset=USDT" \
+  --data-urlencode "start_unix_seconds=1780000000" \
+  --data-urlencode "end_unix_seconds=1780086400" \
+  -o bipa-transactions.csv
+```
+
+The CSV columns are `row_type,ledger_entry_id,asset,change_min_units,balance_min_units,decimal_scale,booked_at_unix_seconds,has_liquid_trade`. It starts with an `opening` row, then `entry` rows, and ends with a `closing` row. Treat an export without its closing row as incomplete. The service rechecks `financial:read` between pages and stops the download if access is revoked.
+
+Invalid filters or cursor return `400`; an absent or revoked key returns `401`; missing treasury access or `financial:read` returns `403`; an unlinked account returns `404`; an unavailable account returns `409`; unreconciled ledger booking times return `422`.

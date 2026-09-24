@@ -1,0 +1,25 @@
+---
+title: "Business balances"
+description: "Read exact operating balances for the business linked to your API key."
+---
+
+`GET /v1/balances` returns the authenticated partner's business checking balances. It takes no query parameters or partner ID. The key needs an active `financial:read` grant, and the organization must be enabled for treasury access. A read-only key works once that separate grant is enabled.
+
+```bash
+curl https://api.bipa.app/v1/balances \
+  -H "X-API-Key: $BIPA_PARTNER_API_KEY"
+```
+
+```json
+{
+  "as_of_unix_seconds": 1780000000,
+  "holdings": [
+    { "asset": "BRL", "operating_balance": { "min_units": "125000", "decimal_scale": 2 } },
+    { "asset": "USDT", "operating_balance": { "min_units": "40000000", "decimal_scale": 6 } }
+  ]
+}
+```
+
+`min_units` is a signed integer string; divide by `10^decimal_scale` for display. Keep the integer representation for accounting. Holdings cover the checking account, not customer funds, savings, collateral, or escrow.
+
+An absent or revoked key returns `401`. Treasury disabled or missing `financial:read` returns `403`; an unlinked account returns `404`; an unavailable account returns `409`.
