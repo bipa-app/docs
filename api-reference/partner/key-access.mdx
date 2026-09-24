@@ -1,0 +1,19 @@
+---
+title: "API key permissions"
+description: "Separate read-only integrations from integrations that can execute operations."
+---
+
+Create keys under **API keys** in the [Bipa Business portal](https://infra.bipa.app/keys). Select the environment and access level before creating the key. Its secret appears once; store it on your server. An issued key's access level cannot be changed, so create a replacement and rotate when you need a different level.
+
+| Access | Allowed Partner API requests |
+| --- | --- |
+| Read only | GET and HEAD. Mutating requests return `403` before the operation runs. |
+| Read and transact | Existing Partner API operations, subject to each endpoint's other authorization checks. |
+
+Read-only access does not itself authorize business balances or statements. A verified business owner must also enable **financial reads** for that specific key in the portal. That `financial:read` grant can be revoked independently. Both key types need the grant to call `GET /v1/balances`, `GET /v1/transactions`, or `GET /v1/transactions.csv`; the business must also be enabled for treasury access. A read-and-transact key does not receive financial reads automatically.
+
+The portal uses the signed-in employee's WorkOS session for key and grant management. API requests use the partner key in `X-API-Key`; the key identifies the partner, not an employee. Do not place it in a browser or mobile app.
+
+Previously issued keys remain read and transact. You can keep four active keys per partner and environment, leaving room for separate read-only and transaction integrations and their replacements during rotation. Revoking a key immediately blocks it, including any financial-read grant it held.
+
+For now, these are the two key access levels plus the separate `financial:read` grant. There are no per-asset or per-endpoint write scopes yet. Use a read-only key for reporting integrations, and protect transaction-capable keys as payment credentials.
