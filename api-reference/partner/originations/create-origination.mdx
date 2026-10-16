@@ -57,6 +57,9 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
 <ResponseField name="action_required" type="string">
   The next step to render. `none` when there is nothing to do.
 </ResponseField>
+<ResponseField name="classification" type="string">
+  The person's Bipa account when the origination arrived: `active_customer`, `deactivated_customer`, or `new_customer`. Present in every state, `denied` included; it reflects the account at `created_at`. See [Bipa account classification](/originations#bipa-account-classification).
+</ResponseField>
 <ResponseField name="created_at" type="string">
   RFC 3339.
 </ResponseField>
@@ -169,6 +172,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   "state": "pending",
   "stage": "validating",
   "action_required": "none",
+  "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-15T14:03:22Z",
   "deadline_at": "2026-10-15T14:03:22Z"
@@ -181,6 +185,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   "state": "denied",
   "stage": "terminal",
   "action_required": "denied",
+  "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-15T14:03:22Z",
   "deadline_at": null

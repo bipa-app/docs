@@ -20,7 +20,7 @@ The person becomes a Bipa customer. After the origination reaches a terminal sta
 ## How it works
 
 1. **Submit.** `POST /migrations` with the envelope. Bipa stores it and answers `201` with the current representation; a two-contact conflict is created directly as a terminal denial.
-2. **Poll.** `GET /migrations/{id}` returns the state, the stage, the action you should take, and a `user_url` when the person has something to do.
+2. **Poll.** `GET /migrations/{id}` returns the state, the stage, the action you should take, the person's [Bipa account classification](#bipa-account-classification), and a `user_url` when the person has something to do.
 3. **Read the terminal state.** `settled`, `denied`, or `expired`. Act on your own books and stop polling.
 
 Bipa never asks you to confirm what you did on your side. Every movement of value happens on Bipa's ledger, from your Bipa account through your originator’s shared escrow account into the person’s account, or back to you. Ledger records attribute each movement to its origination and asset.
@@ -82,7 +82,19 @@ stateDiagram-v2
     validating --> expired
 ```
 
-Terminal states never change. The response never carries a fraud reason, a rule, a provider name, or whether the person already had a Bipa account.
+Terminal states never change. The response never carries a fraud reason, a rule, or a provider name.
+
+## Bipa account classification
+
+Every representation, from the `201` on, carries `classification`: the person's Bipa account, by CPF, when the origination arrived.
+
+| `classification` | The person's Bipa account at `created_at` |
+|---|---|
+| `active_customer` | Active. |
+| `deactivated_customer` | Active once, but not at that moment. |
+| `new_customer` | None. |
+
+The value reflects the account at `created_at`: reactivating an account, or the account the origination opens, does not alter it. It is present in every state, `denied` and `expired` included; a denial shows only in `state`.
 
 ## Deadlines
 
