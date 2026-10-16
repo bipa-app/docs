@@ -4,7 +4,7 @@ api: "POST https://api-sandbox.agentispay.co/migrations"
 description: "Submit one person to Bipa. Accepted asynchronously; poll for the outcome."
 ---
 
-Submits and stores an immutable envelope for one person. Bipa answers `201` with the current representation on first acceptance, including an immediate terminal denial when both contacts conflict, and `200` with the existing origination on an identical retry. See [Originations](/originations) for the envelope rules, the lifecycle, and the error codes.
+Submits and stores an immutable envelope for one person. Bipa answers `201` with the current representation on first acceptance, including when a contact conflicts and the origination starts with `action_required: contact_support`, and `200` with the existing origination on an identical retry. See [Originations](/originations) for the envelope rules, the lifecycle, and the error codes.
 
 <Info>
   **Base URL.** Originations are served on their own host: `https://api.agentispay.co` in production and `https://api-sandbox.agentispay.co` in sandbox. That host serves only the `/migrations` paths; the rest of the Partner API stays on `api.bipa.app`.
@@ -19,7 +19,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   `{ "type": "cpf", "value": "64780788099" }`. Eleven digits, no mask.
 </ParamField>
 <ParamField body="email" type="string" required>
-  Valid email, normalized to lowercase. If both `email` and `phone` belong to other people's Bipa accounts, Bipa stores the complete envelope as a terminal denial and the person must contact Bipa support.
+  Valid email, normalized to lowercase. If the email or the phone belongs to another Bipa account, Bipa stores the complete envelope as `pending` / `manual_review` with `action_required: contact_support`, and the person contacts Bipa support through `support_url`.
 </ParamField>
 <ParamField body="phone" type="string" required>
   Valid E.164 phone.
@@ -31,7 +31,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   `level` is `basic` or `full`. For `full`, also `selfie_file_url` and `document_files` (at most one `front` and one `back`, each with `side` and `file_url`).
 </ParamField>
 <ParamField body="balances" type="array" required>
-  The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset` and `quantity`. The quantity is a positive integer string in the asset's smallest unit. See [Balances and funding](/originations#balances-and-funding) for supported assets, fixed units, and settlement availability. Do not send `network`, `contract`, or `decimal_scale`.
+  The complete portfolio of non-zero positions, or an empty list. Each item contains only `asset` and `quantity`. The quantity is a positive integer string: BRL in cents, every crypto asset at 8 decimal places. See [Balances and funding](/originations#balances-and-funding) for supported assets, fixed units, and settlement availability. Do not send `network`, `contract`, or `decimal_scale`.
 </ParamField>
 <ParamField body="trading_history" type="object">
   Optional or `null` when unknown. Requires `as_of` (RFC 3339, UTC), `total`, and `assets`. Both the total and each asset entry use `last_3_months_cents`, `last_12_months_cents`, and `all_time_cents`: exact non-negative integer strings in BRL cents. Each asset entry also requires `asset`. Do not send `currency` or `decimal_scale`. See [Trading history](/originations#trading-history) for window boundaries, totals, limits, normalization, and known-zero reporting.
@@ -67,10 +67,13 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   RFC 3339. Unchanged means nothing changed.
 </ResponseField>
 <ResponseField name="deadline_at" type="string">
-  RFC 3339. Null once terminal.
+  RFC 3339. The deadline stamped at intake, which no stage change moves. Null once terminal.
 </ResponseField>
 <ResponseField name="user_url" type="string">
-  Present only when the person has a valid action. Locates, does not authenticate.
+  Always present, from the `201` on, and it never changes. Locates the origination for the person; does not authenticate them.
+</ResponseField>
+<ResponseField name="support_url" type="string">
+  Present only with `action_required: contact_support`. Opens Bipa support with the origination identified.
 </ResponseField>
 
 <RequestExample>
@@ -175,20 +178,23 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-15T14:03:22Z",
-  "deadline_at": "2026-10-15T14:03:22Z"
+  "deadline_at": "2026-10-15T14:03:22Z",
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd22"
 }
 ```
 
-```json 201 Created — contact conflict
+```json 201 Created (contact conflict)
 {
-  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd22",
-  "state": "denied",
-  "stage": "terminal",
-  "action_required": "denied",
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd25",
+  "state": "pending",
+  "stage": "manual_review",
+  "action_required": "contact_support",
   "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-15T14:03:22Z",
-  "deadline_at": null
+  "deadline_at": "2026-10-15T14:03:22Z",
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd25",
+  "support_url": "https://bipa.app/migracao/suporte?migration=0199a4be-4aa0-7c5d-91ca-2ab45f86fd25"
 }
 ```
 
