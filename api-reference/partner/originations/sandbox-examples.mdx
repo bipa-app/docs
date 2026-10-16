@@ -11,7 +11,7 @@ Use `https://api-sandbox.agentispay.co/migrations`. Each block is **one copyable
 
 The first request obtains a fresh synthetic identity and signed document URLs. The complete import JSON is visible below, printed before submission and saved to a local `.request.json` file. The response, including `migration_id`, is saved beside it as `.response.json`. It contains no real documents. Each run starts a new test; replay the saved JSON to retry the same import.
 
-Quantities are integer strings in base units: BTC 8 decimals, USDT/USDC/XRP 6, ETH 18 and SOL 9. Send only `asset` and `quantity` in balances. Omit `network`, `contract` and `decimal_scale`.
+Quantities are integer strings in submission units: BRL in cents and every crypto asset at 8 decimals, so `"100000000"` is 1 BTC, 1 USDT, or 1 ETH. The `fund_originator` event is the exception: it takes Bipa's ledger units (see [Funding and polling](#funding-and-polling)). Send only `asset` and `quantity` in balances. Omit `network`, `contract` and `decimal_scale`.
 
 Before testing, Bipa must configure the originator import policy, full-KYC activation policy and the current costs of their checks. Simulated provider calls use test data; funding events create sandbox liquidity. Policies and liquidity belong to the test account, so another account can have different readiness. Normal KYC also needs the simulator postal code `01310100` in Bipa’s address reference data.
 
@@ -54,7 +54,7 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "1000000"},
-    {"asset": "USDT", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
@@ -118,11 +118,11 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "116516515"},
-    {"asset": "USDT", "quantity": "8974655"},
-    {"asset": "ETH", "quantity": "1000000000000000000"},
-    {"asset": "SOL", "quantity": "1000000000"},
-    {"asset": "USDC", "quantity": "1000000"},
-    {"asset": "XRP", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "897465500"},
+    {"asset": "ETH", "quantity": "100000000"},
+    {"asset": "SOL", "quantity": "100000000"},
+    {"asset": "USDC", "quantity": "100000000"},
+    {"asset": "XRP", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
@@ -140,9 +140,9 @@ jq . 02-full.response.json
 '
 ```
 
-## 3. Unreadable document, then recovery
+## 3. Unreadable document, then review
 
-The fixture serves an unreadable front document. Expect `document_recapture_required`, with `action_required: recapture_document`. Send `complete_customer_kyc`; the customer follows Bipa KYC and retains the same migration ID. Recovery through normal KYC and settlement on the same migration ID were verified after Bipa configured the registration workers and sent diagnostic wake events. Automatic completion is affected by the worker issue above. Do not create another import for an unreadable document.
+The fixture serves an unreadable front document. Bipa cannot use it, so expect `pending` / `manual_review` / `manual_review` on the same migration while Bipa reviews the document. The simulated review events apply only to examples with a simulated review, so this migration stays in review until `expire_migration` ends it. Do not create another import for an unreadable document; keep polling the same migration ID.
 
 ```sh
 bash -c '
@@ -186,7 +186,7 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "1000000"},
-    {"asset": "USDT", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
@@ -250,7 +250,7 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "1000000"},
-    {"asset": "USDT", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox")
 }
@@ -284,7 +284,7 @@ Use these complete JSON bodies for the relevant action:
 
 | Current stage | Event JSON | What to expect |
 |---|---|---|
-| `awaiting_onboarding` or `document_recapture_required` | `{"idempotency_key":"kyc-1","event":"complete_customer_kyc"}` | Normal KYC progresses toward settlement; insufficient liquidity can pause it. |
+| `awaiting_onboarding` | `{"idempotency_key":"kyc-1","event":"complete_customer_kyc"}` | Normal KYC progresses toward settlement; insufficient liquidity can pause it. |
 | `awaiting_activation` | `{"idempotency_key":"activation-1","event":"activate_customer"}` | Activation checks run, then settlement or a review/denial. |
 | `manual_review` in example 4 | `{"idempotency_key":"review-1","event":"approve_review"}` | Import resumes toward funding and activation. |
 | Pending simulated review | `{"idempotency_key":"review-1","event":"reject_review"}` | `state: denied`, `stage: terminal`, `action_required: denied`. |
@@ -296,7 +296,7 @@ Events return `202` while pending and `200` when completed. Replay the identical
 
 ## Funding and polling
 
-If any example reaches `awaiting_funding`, fund the missing base-unit amounts. For the two-asset examples:
+If any example reaches `awaiting_funding`, fund the missing amounts in Bipa's ledger units, not the submission units. For the two-asset examples:
 
 ```json
 {
@@ -309,7 +309,23 @@ If any example reaches `awaiting_funding`, fund the missing base-unit amounts. F
 }
 ```
 
-For example 2, use its complete six-asset `balances` array. This event credits sandbox test liquidity; it does not represent a real deposit. To reliably test `awaiting_funding`, Bipa must prepare an underfunded test account. A previously funded account may proceed directly to activation or settlement.
+For example 2, fund the six assets in ledger units:
+
+```json
+{
+  "idempotency_key": "funding-2",
+  "event": "fund_originator",
+  "balances": [
+    { "asset": "BTC", "quantity": "116516515" },
+    { "asset": "USDT", "quantity": "8974655" },
+    { "asset": "ETH", "quantity": "1000000000000000000" },
+    { "asset": "SOL", "quantity": "1000000000" },
+    { "asset": "USDC", "quantity": "1000000" },
+    { "asset": "XRP", "quantity": "1000000" }
+  ]
+}
+```
+ This event credits sandbox test liquidity; it does not represent a real deposit. To reliably test `awaiting_funding`, Bipa must prepare an underfunded test account. A previously funded account may proceed directly to activation or settlement.
 
 ```sh
 curl --silent --show-error --fail-with-body \
@@ -325,4 +341,4 @@ Poll every 5–15 seconds. Observe `state`, `stage` and `action_required` togeth
 
 Replay the saved import JSON with the same key: expect `200` and the original `migration_id`. Change only `external_id` while the migration remains active: expect `409 migration_already_active` with that same ID for your account. Change the body while keeping the original `external_id`: expect `409 external_id_reused`.
 
-Document recapture and manual review remain on the same migration. Continue polling; the partner does not need to import the person again. Bipa must provide the working customer handoff for real recapture; the sandbox event simulates that customer action.
+Manual review remains on the same migration. Continue polling; the partner does not need to import the person again.

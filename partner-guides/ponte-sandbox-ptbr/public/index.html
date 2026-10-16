@@ -485,24 +485,30 @@
         <span class="pill pill-danger">400 malformed_payload</span>.
       </p>
       <p>
-        A quantidade continua sendo uma <strong>string de dígitos na menor unidade do ativo</strong>.
-        A escala é fixa por ativo:
+        A quantidade é uma <strong>string de dígitos em unidades fixas de envio</strong>: BRL em
+        centavos e todo cripto em <strong>8 casas decimais</strong>, seja qual for a precisão do
+        ativo na rede.
       </p>
       <div class="tablewrap">
         <table>
           <thead>
-            <tr><th>Ativo</th><th>Casas</th><th>Exemplo</th><th>Equivale a</th></tr>
+            <tr><th>Ativo</th><th>Casas no envio</th><th>Exemplo</th><th>Equivale a</th></tr>
           </thead>
           <tbody>
             <tr><td><code>BTC</code></td><td class="num">8</td><td><code>"116516515"</code></td><td class="num">1,16516515 BTC</td></tr>
-            <tr><td><code>ETH</code></td><td class="num">18</td><td><code>"1000000000000000000"</code></td><td class="num">1 ETH</td></tr>
-            <tr><td><code>SOL</code></td><td class="num">9</td><td><code>"1000000000"</code></td><td class="num">1 SOL</td></tr>
-            <tr><td><code>USDT</code></td><td class="num">6</td><td><code>"8974655"</code></td><td class="num">8,974655 USDT</td></tr>
-            <tr><td><code>USDC</code></td><td class="num">6</td><td><code>"1000000"</code></td><td class="num">1 USDC</td></tr>
-            <tr><td><code>XRP</code></td><td class="num">6</td><td><code>"1000000"</code></td><td class="num">1 XRP</td></tr>
+            <tr><td><code>ETH</code></td><td class="num">8</td><td><code>"100000000"</code></td><td class="num">1 ETH</td></tr>
+            <tr><td><code>SOL</code></td><td class="num">8</td><td><code>"100000000"</code></td><td class="num">1 SOL</td></tr>
+            <tr><td><code>USDT</code></td><td class="num">8</td><td><code>"897465500"</code></td><td class="num">8,974655 USDT</td></tr>
+            <tr><td><code>USDC</code></td><td class="num">8</td><td><code>"100000000"</code></td><td class="num">1 USDC</td></tr>
+            <tr><td><code>XRP</code></td><td class="num">8</td><td><code>"100000000"</code></td><td class="num">1 XRP</td></tr>
           </tbody>
         </table>
       </div>
+      <p>
+        Mandar USDT, USDC ou XRP com 6 casas credita um centésimo do saldo. O evento
+        <code>fund_originator</code> do sandbox é a exceção: ele credita na precisão do ledger da
+        Bipa (USDT, USDC e XRP com 6 casas, ETH com 18, SOL com 9).
+      </p>
       <p>
         <strong>XRP entrou agora.</strong> BNB ainda não está liberado &mdash; mandar BNB devolve
         <span class="pill pill-warn">422 unsupported_asset</span>.
@@ -626,7 +632,7 @@
             <tr>
               <td><code>document_recapture</code></td>
               <td>A frente do documento vem ilegível.</td>
-              <td><code>document_recapture_required</code>, recuperável na <strong>mesma</strong> migração</td>
+              <td><code>manual_review</code>, na <strong>mesma</strong> migração</td>
             </tr>
             <tr>
               <td><code>provider_unavailable</code></td>
@@ -673,8 +679,8 @@
           <tbody>
             <tr>
               <td><code>complete_customer_kyc</code></td>
-              <td><code>awaiting_onboarding</code><br><code>document_recapture_required</code></td>
-              <td>O cliente concluiu o KYC na plataforma. Na recaptura, o <code>migration_id</code> é o mesmo.</td>
+              <td><code>awaiting_onboarding</code></td>
+              <td>O cliente concluiu o KYC na plataforma.</td>
             </tr>
             <tr>
               <td><code>activate_customer</code></td>
@@ -755,11 +761,11 @@ FIXTURE=$(curl --silent --show-error --fail-with-body \
 printf "%s" "$FIXTURE" \
   | jq ".balances = [
             {\"asset\":\"BTC\",\"quantity\":\"116516515\"},
-            {\"asset\":\"USDT\",\"quantity\":\"8974655\"},
-            {\"asset\":\"ETH\",\"quantity\":\"1000000000000000000\"},
-            {\"asset\":\"SOL\",\"quantity\":\"1000000000\"},
-            {\"asset\":\"USDC\",\"quantity\":\"1000000\"},
-            {\"asset\":\"XRP\",\"quantity\":\"1000000\"}
+            {\"asset\":\"USDT\",\"quantity\":\"897465500\"},
+            {\"asset\":\"ETH\",\"quantity\":\"100000000\"},
+            {\"asset\":\"SOL\",\"quantity\":\"100000000\"},
+            {\"asset\":\"USDC\",\"quantity\":\"100000000\"},
+            {\"asset\":\"XRP\",\"quantity\":\"100000000\"}
           ]" \
   | tee pedido.json
 
@@ -798,8 +804,8 @@ jq . resposta.json
             <tr>
               <td><strong>3.</strong> Documento ilegível</td>
               <td><code>document_recapture</code></td>
-              <td><code>document_recapture_required</code></td>
-              <td><code>complete_customer_kyc</code> &mdash; mesma migração, não criem outra</td>
+              <td><code>manual_review</code></td>
+              <td>A Bipa revisa; só <code>expire_migration</code> encerra no sandbox. Mesma migração, não criem outra</td>
             </tr>
             <tr>
               <td><strong>4.</strong> Revisão manual</td>
@@ -900,7 +906,7 @@ jq . resposta.json
           <div>
             <h3>O <code>user_url</code> ainda não abre</h3>
             <p>
-              Quando a migração pede uma ação do cliente, a resposta traz um <code>user_url</code>.
+              Toda resposta traz um <code>user_url</code>, desde o <code>201</code>.
               Hoje esse link devolve 404. O campo e o formato já são os definitivos, então dá para
               integrar contra ele; no sandbox, o evento <code>complete_customer_kyc</code> faz o
               papel do cliente.
