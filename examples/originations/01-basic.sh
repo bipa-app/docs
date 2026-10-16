@@ -32,7 +32,7 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "1000000"},
-    {"asset": "USDT", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }

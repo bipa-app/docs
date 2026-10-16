@@ -39,11 +39,11 @@ REQUEST=$(cat <<JSON
   },
   "balances": [
     {"asset": "BTC", "quantity": "116516515"},
-    {"asset": "USDT", "quantity": "8974655"},
-    {"asset": "ETH", "quantity": "1000000000000000000"},
-    {"asset": "SOL", "quantity": "1000000000"},
-    {"asset": "USDC", "quantity": "1000000"},
-    {"asset": "XRP", "quantity": "1000000"}
+    {"asset": "USDT", "quantity": "897465500"},
+    {"asset": "ETH", "quantity": "100000000"},
+    {"asset": "SOL", "quantity": "100000000"},
+    {"asset": "USDC", "quantity": "100000000"},
+    {"asset": "XRP", "quantity": "100000000"}
   ],
   "sandbox": $(printf "%s" "$FIXTURE" | jq ".sandbox + {monthly_income_cents: \"1200000\"}")
 }
