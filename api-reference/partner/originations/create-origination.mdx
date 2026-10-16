@@ -19,7 +19,7 @@ Submits and stores an immutable envelope for one person. Bipa answers `201` with
   `{ "type": "cpf", "value": "64780788099" }`. Eleven digits, no mask.
 </ParamField>
 <ParamField body="email" type="string" required>
-  Valid email, normalized to lowercase. If the email or the phone belongs to the Bipa account of another tax id, Bipa stores the complete envelope as `pending` / `manual_review` with `action_required: contact_support`, and the person contacts Bipa support through `support_url`.
+  Valid email, normalized to lowercase. If the email or the phone belongs to another Bipa account, Bipa stores the complete envelope as `pending` / `manual_review` with `action_required: contact_support`, and the person contacts Bipa support through `support_url`.
 </ParamField>
 <ParamField body="phone" type="string" required>
   Valid E.164 phone.

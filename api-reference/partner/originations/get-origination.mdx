@@ -4,7 +4,7 @@ api: "GET https://api-sandbox.agentispay.co/migrations/{id}"
 description: "The current safe representation of an origination."
 ---
 
-Returns the state, stage, action, the person's Bipa account classification, timestamps, deadline, and the `user_url`. Poll it every 5 to 15 seconds during the first minute, then back off to 60 seconds. Terminal states never change.
+Returns the state, stage, action, the person's Bipa account classification, timestamps, deadline, and the `user_url`, plus `support_url` with `contact_support`. Poll it every 5 to 15 seconds during the first minute, then back off to 60 seconds. Terminal states never change.
 
 <Info>
   **Base URL.** Originations are served on their own host: `https://api.agentispay.co` in production and `https://api-sandbox.agentispay.co` in sandbox. That host serves only the `/migrations` paths; the rest of the Partner API stays on `api.bipa.app`.
