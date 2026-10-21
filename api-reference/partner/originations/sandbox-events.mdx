@@ -26,7 +26,7 @@ Each event plays the part of something that happens outside your system: the cus
 
   | Value | Send it when | What it does |
   |---|---|---|
-  | `complete_customer_kyc` | `awaiting_onboarding`, `document_recapture_required` | The customer finishes Bipa KYC. Recapture keeps the same migration id. |
+  | `complete_customer_kyc` | `awaiting_onboarding` | The customer finishes Bipa KYC. |
   | `activate_customer` | `awaiting_activation` | The customer verifies contact and activates; activation checks run. |
   | `approve_review` | `manual_review` | An operator approves; the import resumes toward funding and activation. |
   | `reject_review` | `manual_review` | An operator denies. Terminal, with reserved assets refunded. |
@@ -36,7 +36,7 @@ Each event plays the part of something that happens outside your system: the cus
   | `recover_provider` | after a provider failure | Brings the failed provider back. |
 </ParamField>
 <ParamField body="balances" type="array">
-  Required for `fund_originator`, ignored otherwise. The amounts to credit, each `{ asset, quantity }` with `quantity` a string of digits in the asset's smallest unit. Match the migration's own balances.
+  Required for `fund_originator`; any other event that carries it answers `400 malformed_payload`. The amounts to credit, each `{ asset, quantity }`, with `quantity` a string of digits in Bipa's **ledger** units, not the 8-decimal submission units: BRL 2, BTC 8, USDT 6, USDC 6, XRP 6, ETH 18, SOL 9 decimal places. To cover a migration, convert its balances: 1 USDT, submitted as `"100000000"`, is funded as `"1000000"`.
 </ParamField>
 
 ## Response
