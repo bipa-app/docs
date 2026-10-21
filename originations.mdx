@@ -19,8 +19,8 @@ The person becomes a Bipa customer. After the origination reaches a terminal sta
 
 ## How it works
 
-1. **Submit.** `POST /migrations` with the envelope. Bipa stores it and answers `201` with the current representation; a two-contact conflict is created directly as a terminal denial.
-2. **Poll.** `GET /migrations/{id}` returns the state, the stage, the action you should take, the person's [Bipa account classification](#bipa-account-classification), and a `user_url` when the person has something to do.
+1. **Submit.** `POST /migrations` with the envelope. Bipa stores it and answers `201` with the current representation; a contact conflict comes back as `manual_review` with `action_required: contact_support` (see [The envelope](#the-envelope)).
+2. **Poll.** `GET /migrations/{id}` returns the state, the stage, the action you should take, the person's [Bipa account classification](#bipa-account-classification), and the `user_url`.
 3. **Read the terminal state.** `settled`, `denied`, or `expired`. Act on your own books and stop polling.
 
 Bipa never asks you to confirm what you did on your side. Every movement of value happens on Bipa's ledger, from your Bipa account through your originator’s shared escrow account into the person’s account, or back to you. Ledger records attribute each movement to its origination and asset.
@@ -29,21 +29,23 @@ Bipa never asks you to confirm what you did on your side. Every movement of valu
 
 The envelope is immutable. Retrying the same `external_id` with the same normalized content returns the existing origination with `200`; retrying it with different content is refused with `409 external_id_reused`.
 
+You can also read an origination by your own `external_id` with [Get Origination by External ID](/api-reference/partner/originations/get-origination-by-external-id).
+
 | Field | Rules |
 |---|---|
 | `external_id` | 1 to 64 characters. Your identifier for this attempt. A new attempt after `denied` or `expired` uses a new value. |
 | `tax_id` | `{ "type": "cpf", "value": "..." }`. 11 digits, no mask. `cnpj` answers `422 pj_not_supported` for now. |
-| `email`, `phone` | A valid email, lowercased; a valid E.164 phone. If both belong to other people's Bipa accounts, Bipa stores the complete envelope and returns it immediately as `denied`; direct the person to Bipa support. If only one conflicts, the other becomes the person's login contact. |
+| `email`, `phone` | A valid email, lowercased; a valid E.164 phone. If the email or the phone belongs to another person's Bipa account, Bipa still stores the complete envelope, as `pending` / `manual_review` with `action_required: contact_support`; direct the person to Bipa support through `support_url`. |
 | `consents.data_sharing`, `consents.terms_of_service` | Two separate proofs: `accepted_at` (RFC 3339, UTC), `ip`, `user_agent` (up to 512 characters), `document_version`, `document_digest_sha256` (64 hex characters of the rendered text), `locale` (BCP 47). |
 | `kyc.level` | `basic` or `full`. |
 | `kyc.selfie_file_url` | Required for `full`. A pre-signed HTTPS URL on the host you registered with Bipa. |
 | `kyc.document_files` | Required and non-empty for `full`: at most one `front` and one `back`, each `{ "side", "file_url" }`. You do not tell us the document type; Bipa classifies it. |
-| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, quantity }`, with `quantity` a string of digits in the asset's smallest unit. |
+| `balances` | The person's complete portfolio of non-zero positions, or an empty list. Each item is `{ asset, quantity }`, with `quantity` a string of digits: BRL in cents, every crypto asset at 8 decimal places. See [Balances and funding](#balances-and-funding). |
 | `address` | Optional. When present every field is required except `complement`. |
 | `bureau_blobs` | Optional. One item per `dataset` (`basic_data`, `processes`, `financial_data`, `kyc`), the provider's raw payload, up to 256 KiB each. |
 | `trading_history` | Optional historical gross trading values in BRL cents, by asset and total. See [Trading history](#trading-history). |
 
-Files must be JPEG or PNG, up to 10 MB, and the URLs must stay valid for at least 24 hours. Bipa copies them asynchronously from the public internet, so the URL host must be publicly resolvable and reachable: a hostname that only resolves inside your network, or that points at a private address, is treated as a file that cannot be used. Such a file does not fail the submission; the origination moves to `document_recapture_required` and the person recaptures it inside Bipa.
+Files must be JPEG or PNG, up to 10 MB, and the URLs must stay valid for at least 24 hours. Bipa copies them asynchronously from the public internet, so the URL host must be publicly resolvable and reachable: a hostname that only resolves inside your network, or that points at a private address, is treated as a file that cannot be used, and so is a URL that redirects or answers with a client error, or a file that is not JPEG or PNG. Such a file does not fail the submission; the origination moves to `manual_review` and Bipa reviews it. A host that resolves publicly but does not answer, or answers with a server error, is retried until the deadline, and the origination then expires.
 
 The request body is limited to 4 MB. Above that the answer is `413` with no body.
 
@@ -56,31 +58,39 @@ Every representation carries a coarse `state`, a `stage`, and the `action_requir
 | `pending` | `validating` | `none` | Bipa is working. Keep the balance frozen and keep polling. |
 | `pending` | `awaiting_onboarding` | `standard_onboarding` | A basic-KYC person completes Bipa’s normal KYC through `user_url`. |
 | `pending` | `manual_review` | `manual_review` | A compliance analyst is looking. Do not promise a timeline or a reason. |
-| `pending` | `document_recapture_required` | `recapture_document` | The person recaptures their document and selfie through `user_url`. |
+| `pending` | `manual_review` | `contact_support` | The person's data conflicts with an existing Bipa account. Send the person to Bipa support through `support_url`; keep the balance frozen. |
 | `pending` | `awaiting_funding` | `fund_liquidity` | Your Bipa account is short of at least one asset. Nothing moved. Deposit, and Bipa retries. |
 | `approved` | `awaiting_activation` | `activate` | The whole portfolio is reserved. The person activates through `user_url`. |
 | `denied` | `terminal` | `denied` | Any reserved balance was already returned to your account. Release the person's balance on your side. |
 | `expired` | `terminal` | `expired` | Same as denied. |
-| `settled` | `terminal` | `settled` | The whole portfolio was credited to the person. Consume their balance on your side. |
+| `settled` | `terminal` | `settled` | The whole portfolio, at Bipa's ledger precision, was credited to the person. Consume their balance on your side; digits below the ledger precision stay with you (see [Balances and funding](#balances-and-funding)). |
 
 ```mermaid
 stateDiagram-v2
+    state "manual_review / contact_support" as contact_support
     validating --> manual_review
-    validating --> document_recapture_required
     validating --> awaiting_onboarding
     validating --> awaiting_funding
     validating --> awaiting_activation
+    manual_review --> validating
+    manual_review --> awaiting_onboarding
+    manual_review --> awaiting_funding
+    manual_review --> awaiting_activation
+    awaiting_onboarding --> awaiting_funding
+    awaiting_onboarding --> settled
     awaiting_funding --> awaiting_activation
     awaiting_funding --> settled
-    awaiting_onboarding --> awaiting_funding
-    document_recapture_required --> awaiting_funding
     awaiting_activation --> settled
-    awaiting_onboarding --> settled
-    document_recapture_required --> settled
-    manual_review --> awaiting_activation
-    validating --> denied
-    validating --> expired
+    awaiting_onboarding --> contact_support
+    awaiting_funding --> contact_support
+    awaiting_activation --> contact_support
+    contact_support --> validating
+    contact_support --> awaiting_onboarding
+    contact_support --> awaiting_funding
+    contact_support --> awaiting_activation
 ```
+
+Any nonterminal stage can also end in `denied` or `expired`. A conflict can also appear after intake, from `awaiting_onboarding`, `awaiting_funding`, or `awaiting_activation`; from `awaiting_activation` the state goes back to `pending` and the reserved portfolio stays reserved. Support either resolves the conflict, and the origination resumes at the stage it left, or denies it.
 
 Terminal states never change. The response never carries a fraud reason, a rule, or a provider name.
 
@@ -98,27 +108,37 @@ The value reflects the account at `created_at`: reactivating an account, or the 
 
 ## Deadlines
 
-Every entry into a pending stage starts a 30-day deadline, and `awaiting_activation` starts a 30-day activation window. Always use `deadline_at` from the latest representation; do not compute it locally. A technical retry does not restart a clock. A replacement signup while funding is pending preserves the existing funding deadline. Expiry with a reserved balance returns the balance to your account before the state becomes `expired`.
+Intake stamps one deadline in `deadline_at`: your originator's regulatory cutoff when Bipa has one configured, otherwise 30 days after intake. No stage change moves it, and a technical retry does not restart it. When it passes, the origination expires from whatever nonterminal stage it is in; a reserved balance returns to your account before the state becomes `expired`. `deadline_at` is `null` once terminal. Always use `deadline_at` from the latest representation; do not compute it locally.
+
+After your regulatory cutoff, new submissions answer `422 migration_window_closed`, which is final. An identical retry of an `external_id` Bipa already accepted still answers.
 
 ## The user URL
 
-`user_url` locates the origination for the person. It does not authenticate them. To act, the person signs in to Bipa with the same tax id, or completes Bipa’s normal KYC. A forwarded link cannot claim anything.
+Every response carries `user_url`, from the `201` on, and it never changes. Hand it to the person as soon as you get the `201`. It locates the origination for the person. It does not authenticate them. To act, the person signs in to Bipa with the same tax id, or completes Bipa’s normal KYC. A forwarded link cannot claim anything.
+
+`support_url` appears only with `contact_support`. It opens Bipa support with the origination identified.
 
 ## Balances and funding
 
-Each balance contains only `asset` and `quantity`. Bipa defines the units for each asset. Do not send `network`, `contract`, or `decimal_scale`; these unknown fields return `400 malformed_payload`.
+Each balance contains only `asset` and `quantity`. Do not send `network`, `contract`, or `decimal_scale`; these unknown fields return `400 malformed_payload`.
 
-| Asset | Decimal places |
-|---|---|
-| BRL | 2 |
-| BTC | 8 |
-| USDT | 6 |
-| ETH | 18 |
-| SOL | 9 |
-| USDC | 6 |
-| XRP | 6 |
+`quantity` is an integer in fixed submission units: BRL in cents, and **every crypto asset at 8 decimal places**, whatever its precision on its network.
 
-`quantity` must be a positive integer string matching `^[1-9][0-9]*$`. For example, `"100000000"` means 1 BTC, and `"1000000"` means 1 USDT or 1 XRP. Do not send a JSON number, a decimal fraction, or a zero position.
+| Asset | Decimal places in `quantity` | Bipa ledger decimal places |
+|---|---|---|
+| BRL | 2 | 2 |
+| BTC | 8 | 8 |
+| USDT | 8 | 6 |
+| ETH | 8 | 18 |
+| SOL | 8 | 9 |
+| USDC | 8 | 6 |
+| XRP | 8 | 6 |
+
+For example, `"100000000"` means 1 BTC, 1 USDT, 1 ETH, or 1 XRP. Sending USDT, USDC, or XRP at their native 6 decimals credits a hundredth of the balance, and sending ETH or SOL at their native 18 or 9 decimals multiplies it by 10^10 or 10.
+
+`quantity` must be a positive integer string matching `^[1-9][0-9]*$`, at most `170141183460469231731687303715884105727`. Do not send a JSON number, a decimal fraction, or a zero position.
+
+Bipa converts each balance to its ledger precision when it reserves and settles it. For USDT, USDC, and XRP it drops the last two digits without rounding; Bipa does not move that remainder, so it stays with you. For ETH and SOL it appends zeros. A balance that converts to zero is not credited. A balance that, once converted, exceeds the ledger limit answers `422 quantity_out_of_range`.
 
 Asset symbols are case-sensitive. An unsupported asset or duplicate position returns `422 unsupported_asset`. BNB is not supported. Submit the complete portfolio; do not omit an unsupported position to make the request pass.
 
@@ -127,7 +147,7 @@ Bipa selects the on-chain asset for the environment through its custody integrat
 Balances you hand over are funded from your own Bipa account. One escrow account belongs to your originator and holds reserved assets across customers; each origination has its own ledger references.
 
 - **Full KYC:** after import pre-approval, Bipa reserves the complete portfolio in escrow. Successful account activation settles it into the customer's account. Denial or expiry returns any reserved assets to your account.
-- **Basic KYC or document recapture:** Bipa does not reserve the portfolio at import pre-approval. Once the person completes normal KYC, account approval and the complete source → escrow → customer movement happen in one transaction. If any source asset is short, the origination waits in `awaiting_funding` and account approval waits too.
+- **Basic KYC:** Bipa does not reserve the portfolio at import pre-approval. Once the person completes normal KYC, account approval and the complete source → escrow → customer movement happen in one transaction. If any source asset is short, the origination waits in `awaiting_funding` and account approval waits too.
 
 There is no partial portfolio settlement: a shortfall moves nothing, and an error rolls back account approval and the associated balance movements together.
 
@@ -183,16 +203,19 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `400` | `malformed_payload` | Invalid JSON, field, type, format, or combination. |
 | `401` | | Missing or invalid key. |
 | `403` | | Source IP outside your allowlist. |
-| `404` | | Unknown id, or not yours. |
+| `404` | | Unknown id or `external_id`, or not yours. |
 | `409` | `external_id_reused` | Same `external_id`, different envelope. |
-| `409` | `migration_already_active` | This tax id already has an active origination. `migration_id` identifies it when it belongs to your account. |
+| `409` | `migration_already_active` | This tax id already has a `pending` or `approved` origination. `migration_id` identifies it when it belongs to your account. |
 | `413` | | Body over 4 MB. |
 | `422` | `pj_not_supported` | A CNPJ. |
 | `422` | `unsupported_asset` | Unsupported asset, or a duplicate position. |
-| `422` | `already_originated` | This tax id was already settled. |
+| `422` | `quantity_out_of_range` | A balance that exceeds the ledger limit once converted to the asset's ledger precision. |
+| `422` | `already_migrated` | This tax id was already settled. |
+| `422` | `migration_window_closed` | Your regulatory cutoff has passed; no new origination starts. Final, do not retry. |
+| `422` | `sandbox_only` | A `sandbox` object in a production request. |
 | `429` | | Rate limit. Honor `Retry-After`. |
 | `500` | `internal` | Internal failure, no sensitive detail. |
-| `503` | `temporarily_unavailable` | Intake paused or a dependency down. Retry with backoff. |
+| `503` | `temporarily_unavailable` | Intake paused or a dependency down. Honor `Retry-After` and retry with backoff. |
 
 Errors contain `code`. An active-migration conflict also includes `migration_id` when that migration belongs to your originator account:
 
@@ -205,6 +228,6 @@ Errors contain `code`. An active-migration conflict also includes `migration_id`
 
 Poll the returned ID instead of submitting a new migration. Conflicts with another originator omit the ID. An identical request with the original `external_id` still returns `200` with the existing migration.
 
-A document that cannot be read or validated can require `document_recapture_required` or `manual_review`. These are nonterminal: Bipa handles customer recapture or review on the same migration. Continue polling that ID; do not create another import for that person. `denied` is a terminal rejection, distinct from a request for more evidence.
+A document that cannot be read or validated sends the origination to `manual_review`. It is nonterminal: Bipa reviews it on the same migration. Continue polling that ID; do not create another import for that person. `denied` is a terminal rejection.
 
 For controlled frontend tests, see [Sandbox migration examples](/api-reference/partner/originations/sandbox-examples).

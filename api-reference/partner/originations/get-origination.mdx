@@ -4,7 +4,7 @@ api: "GET https://api-sandbox.agentispay.co/migrations/{id}"
 description: "The current safe representation of an origination."
 ---
 
-Returns the state, stage, action, the person's Bipa account classification, timestamps, deadline, and, when the person has something to do, the `user_url`. Poll it every 5 to 15 seconds during the first minute, then back off to 60 seconds. Terminal states never change.
+Returns the state, stage, action, the person's Bipa account classification, timestamps, deadline, and the `user_url`, plus `support_url` with `contact_support`. Poll it every 5 to 15 seconds during the first minute, then back off to 60 seconds. Terminal states never change.
 
 <Info>
   **Base URL.** Originations are served on their own host: `https://api.agentispay.co` in production and `https://api-sandbox.agentispay.co` in sandbox. That host serves only the `/migrations` paths; the rest of the Partner API stays on `api.bipa.app`.
@@ -30,7 +30,7 @@ The same representation as [Create Origination](/api-reference/partner/originati
   "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-16T10:00:00Z",
-  "deadline_at": "2026-10-16T10:00:00Z",
+  "deadline_at": "2026-10-15T14:03:22Z",
   "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd22"
 }
 ```
@@ -44,7 +44,8 @@ The same representation as [Create Origination](/api-reference/partner/originati
   "classification": "new_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-20T18:31:04Z",
-  "deadline_at": null
+  "deadline_at": null,
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd22"
 }
 ```
 
@@ -57,7 +58,8 @@ The same representation as [Create Origination](/api-reference/partner/originati
   "classification": "deactivated_customer",
   "created_at": "2026-09-15T14:03:22Z",
   "updated_at": "2026-09-16T10:12:48Z",
-  "deadline_at": null
+  "deadline_at": null,
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd24"
 }
 ```
 </ResponseExample>

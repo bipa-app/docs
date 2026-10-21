@@ -110,6 +110,7 @@
             "pages": [
               "api-reference/partner/originations/create-origination",
               "api-reference/partner/originations/get-origination",
+              "api-reference/partner/originations/get-origination-by-external-id",
               "api-reference/partner/originations/sandbox-fixture",
               "api-reference/partner/originations/sandbox-events",
               "api-reference/partner/originations/sandbox-examples"

@@ -1,0 +1,36 @@
+---
+title: "Get Origination by External ID"
+api: "GET https://api-sandbox.agentispay.co/migrations/external/{external_id}"
+description: "The current safe representation of an origination, found by your external_id."
+---
+
+Returns the same representation as [Get Origination](/api-reference/partner/originations/get-origination), found by the `external_id` you sent on submission instead of the `migration_id`.
+
+## Path
+
+<ParamField path="external_id" type="string" required>
+  The `external_id` you sent on submission, percent-encoded as one path segment (for example with `encodeURIComponent`).
+</ParamField>
+
+## Response
+
+Same as [Get Origination](/api-reference/partner/originations/get-origination). `404` when your credential has no origination with that `external_id`.
+
+<ResponseExample>
+```json 200 OK
+{
+  "migration_id": "0199a4be-4aa0-7c5d-91ca-2ab45f86fd23",
+  "state": "settled",
+  "stage": "terminal",
+  "action_required": "settled",
+  "classification": "active_customer",
+  "created_at": "2026-09-15T14:03:22Z",
+  "updated_at": "2026-09-15T14:03:22Z",
+  "deadline_at": null,
+  "user_url": "https://bipa.app/migracao/0199a4be-4aa0-7c5d-91ca-2ab45f86fd23"
+}
+```
+
+```json 404 Not Found
+```
+</ResponseExample>
