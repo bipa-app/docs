@@ -29,6 +29,8 @@ Bipa never asks you to confirm what you did on your side. Every movement of valu
 
 The envelope is immutable. Retrying the same `external_id` with the same normalized content returns the existing origination with `200`; retrying it with different content is refused with `409 external_id_reused`.
 
+You can also read an origination by your own `external_id` with [Get Origination by External ID](/api-reference/partner/originations/get-origination-by-external-id).
+
 | Field | Rules |
 |---|---|
 | `external_id` | 1 to 64 characters. Your identifier for this attempt. A new attempt after `denied` or `expired` uses a new value. |
@@ -201,7 +203,7 @@ Poll the `GET` every 5 to 15 seconds during the first minute, then back off to 6
 | `400` | `malformed_payload` | Invalid JSON, field, type, format, or combination. |
 | `401` | | Missing or invalid key. |
 | `403` | | Source IP outside your allowlist. |
-| `404` | | Unknown id, or not yours. |
+| `404` | | Unknown id or `external_id`, or not yours. |
 | `409` | `external_id_reused` | Same `external_id`, different envelope. |
 | `409` | `migration_already_active` | This tax id already has a `pending` or `approved` origination. `migration_id` identifies it when it belongs to your account. |
 | `413` | | Body over 4 MB. |
