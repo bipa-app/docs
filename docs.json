@@ -57,7 +57,17 @@
             "iconColor": "#3B82F6",
             "pages": [
               "api-reference/partner/introduction",
-              "api-reference/partner/authentication"
+              "api-reference/partner/authentication",
+              "api-reference/partner/key-access"
+            ]
+          },
+          {
+            "group": "Business Treasury",
+            "icon": "wallet",
+            "iconColor": "#3B82F6",
+            "pages": [
+              "api-reference/partner/treasury/balances",
+              "api-reference/partner/treasury/transactions"
             ]
           },
           {

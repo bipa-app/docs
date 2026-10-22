@@ -42,11 +42,13 @@ curl https://api.bipa.app/v1/me \
 
 ## Obtaining API keys
 
-Partner API keys are provisioned by Bipa during the partner onboarding process. Contact your Bipa representative to obtain your API key.
+Create sandbox and production keys from **API keys** in the [Bipa Business portal](https://infra.bipa.app/keys). Production access requires an approved organization. You can keep up to four active keys per partner and environment, so you can separate integrations and rotate a key before revoking its predecessor.
 
 <Note>
-  Each partner organization receives a unique API key. Keep your key secure and never share it publicly.
+  A key identifies one partner in one environment. The partner ID comes from the key; do not send a partner ID to select an account. Keep the key secure and never share it publicly.
 </Note>
+
+Choose **read only** or **read and transact** when creating a key. Existing keys retain read and transact access. Read-only keys can call GET and HEAD routes; POST, PATCH, PUT, and DELETE requests return `403`. Access cannot be changed on an issued key. [See key permissions](/api-reference/partner/key-access).
 
 ## Security best practices
 
@@ -68,4 +70,4 @@ Partner API keys should only be used in server-to-server communications. Never i
 
 ### Rotate keys if compromised
 
-If you suspect your API key has been compromised, contact Bipa immediately to revoke the key and obtain a new one.
+If you suspect your API key has been compromised, revoke it in the Bipa Business portal and create a replacement. Contact Bipa if you cannot access the portal.
